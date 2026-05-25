@@ -1,0 +1,465 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== MULTI-TENANT CORE ====================
+
+model Company {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  industry    String?
+  logo        String?
+  domain      String?
+  country     String?
+  currency    String   @default("USD")
+  timezone    String   @default("UTC")
+  isActive    Boolean  @default(true)
+  parentId    String?  // For holding company hierarchy
+  parent      Company?  @relation("CompanyHierarchy", fields: [parentId], references: [id])
+  children    Company[] @relation("CompanyHierarchy")
+  branches    Branch[]
+  departments Department[]
+  employees   Employee[]
+  users       User[]
+  jobs        Job[]
+  clients     Client[]
+  vendors     Vendor[]
+  leavePolicies LeavePolicy[]
+  payrollStructures PayrollStructure[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Branch {
+  id        String   @id @default(cuid())
+  name      String
+  code      String
+  address   String?
+  city      String?
+  state     String?
+  country   String?
+  isActive  Boolean  @default(true)
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  employees Employee[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String
+  code        String
+  description String?
+  isActive    Boolean  @default(true)
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  parentId    String?
+  parent      Department?  @relation("DeptHierarchy", fields: [parentId], references: [id])
+  children    Department[] @relation("DeptHierarchy")
+  employees   Employee[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==================== USER & AUTH ====================
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password      String
+  name          String
+  avatar        String?
+  role          String   @default("employee") // super_admin, company_hr_admin, hr_executive, dept_head, reporting_manager, employee, finance, it_admin, recruiter, vendor, client, auditor
+  isActive      Boolean  @default(true)
+  companyId     String?
+  company       Company? @relation(fields: [companyId], references: [id])
+  employee      Employee?
+  lastLogin     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ==================== EMPLOYEE CORE ====================
+
+model Employee {
+  id              String   @id @default(cuid())
+  employeeId      String   @unique
+  firstName       String
+  lastName        String
+  email           String   @unique
+  phone           String?
+  avatar          String?
+  dateOfBirth     DateTime?
+  gender          String?
+  maritalStatus   String?
+  nationality     String?
+  address         String?
+  city            String?
+  state           String?
+  country         String?
+  zipCode         String?
+  emergencyContact String?
+  emergencyPhone  String?
+  // Professional
+  designation     String
+  jobTitle        String?
+  employmentType  String   @default("full-time") // full-time, part-time, contract, intern
+  status          String   @default("active") // active, on_leave, probation, notice_period, exited
+  joiningDate     DateTime
+  exitDate        DateTime?
+  probationEnd    DateTime?
+  // Reporting
+  reportingManagerId String?
+  reportingManager   Employee?  @relation("ReportingMatrix", fields: [reportingManagerId], references: [id])
+  directReports      Employee[] @relation("ReportingMatrix")
+  approvedLeaves     Leave[]    @relation("LeaveApprovals")
+  // Organization
+  companyId       String
+  company         Company  @relation(fields: [companyId], references: [id])
+  branchId        String?
+  branch          Branch?  @relation(fields: [branchId], references: [id])
+  departmentId    String
+  department      Department @relation(fields: [departmentId], references: [id])
+  // User link
+  userId          String?  @unique
+  user            User?    @relation(fields: [userId], references: [id])
+  // Relations
+  attendance      Attendance[]
+  leaves          Leave[]
+  payrollRecords  PayrollRecord[]
+  goals           Goal[]
+  assetAllocations AssetAllocation[]
+  expenseClaims   ExpenseClaim[]
+  travelRequests  TravelRequest[]
+  learningRecords LearningRecord[]
+  tickets         Ticket[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ==================== RECRUITMENT ====================
+
+model Job {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  requirements    String?
+  department      String?
+  location        String?
+  employmentType  String?
+  experienceMin   Int?
+  experienceMax   Int?
+  salaryMin       Float?
+  salaryMax       Float?
+  status          String   @default("draft") // draft, open, on_hold, closed, filled
+  priority        String   @default("medium") // low, medium, high, urgent
+  positions       Int      @default(1)
+  filledPositions Int      @default(0)
+  postedDate      DateTime?
+  closingDate     DateTime?
+  companyId       String
+  company         Company  @relation(fields: [companyId], references: [id])
+  candidates      Candidate[]
+  interviews      Interview[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Candidate {
+  id              String   @id @default(cuid())
+  firstName       String
+  lastName        String
+  email           String
+  phone           String?
+  resume          String?
+  currentCompany  String?
+  currentTitle    String?
+  experience      Int?
+  expectedSalary  Float?
+  noticePeriod    String?
+  status          String   @default("applied") // applied, screening, shortlisted, interviewing, offered, hired, rejected, on_hold
+  source          String?  // portal, referral, vendor, linkedin, naukri
+  aiScore         Float?
+  skillMatch      Float?
+  cultureFitScore Float?
+  jobId           String
+  job             Job      @relation(fields: [jobId], references: [id])
+  interviews      Interview[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Interview {
+  id            String   @id @default(cuid())
+  type          String   @default("technical") // technical, hr, manager, ai_screening
+  scheduledAt   DateTime
+  duration      Int?     // minutes
+  status        String   @default("scheduled") // scheduled, completed, cancelled, no_show
+  feedback      String?
+  rating        Int?
+  meetingLink   String?
+  candidateId   String
+  candidate     Candidate @relation(fields: [candidateId], references: [id])
+  jobId         String
+  job           Job       @relation(fields: [jobId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ==================== ATTENDANCE ====================
+
+model Attendance {
+  id          String   @id @default(cuid())
+  date        DateTime
+  checkIn     DateTime?
+  checkOut    DateTime?
+  breakDuration Int?   // minutes
+  workHours   Float?
+  status      String   @default("present") // present, absent, late, half_day, work_from_home, on_leave
+  source      String   @default("web") // biometric, gps, qr, rfid, mobile, web
+  notes       String?
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([employeeId, date])
+}
+
+// ==================== LEAVE ====================
+
+model LeavePolicy {
+  id            String   @id @default(cuid())
+  name          String
+  type          String   // casual, sick, paid, maternity, paternity, comp_off, lop
+  totalDays     Int
+  carryForward  Boolean  @default(false)
+  maxCarryDays  Int      @default(0)
+  isPaid        Boolean  @default(true)
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Leave {
+  id          String   @id @default(cuid())
+  type        String   // casual, sick, paid, maternity, paternity, comp_off, lop
+  startDate   DateTime
+  endDate     DateTime
+  totalDays   Float
+  reason      String?
+  status      String   @default("pending") // pending, approved, rejected, cancelled
+  approverId  String?
+  approver    Employee? @relation("LeaveApprovals", fields: [approverId], references: [id])
+  employeeId  String
+  employee    Employee  @relation(fields: [employeeId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==================== PAYROLL ====================
+
+model PayrollStructure {
+  id          String   @id @default(cuid())
+  name        String
+  basicPay    Float
+  hra         Float?
+  da          Float?
+  transportAllowance Float?
+  medicalAllowance   Float?
+  specialAllowance   Float?
+  pfEmployee  Float?
+  pfEmployer  Float?
+  esiEmployee Float?
+  esiEmployer Float?
+  taxDeduction Float?
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PayrollRecord {
+  id              String   @id @default(cuid())
+  month           Int
+  year            Int
+  basicPay        Float
+  grossSalary     Float
+  totalDeductions Float
+  netSalary       Float
+  status          String   @default("processed") // draft, processed, paid, held
+  paymentDate     DateTime?
+  employeeId      String
+  employee        Employee @relation(fields: [employeeId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([employeeId, month, year])
+}
+
+// ==================== PERFORMANCE ====================
+
+model Goal {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  type        String   @default("individual") // individual, team, department, company
+  category    String?  // okr, kpi, smart
+  progress    Int      @default(0)
+  status      String   @default("not_started") // not_started, in_progress, completed, overdue
+  startDate   DateTime
+  endDate     DateTime
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==================== ASSETS ====================
+
+model AssetAllocation {
+  id          String   @id @default(cuid())
+  assetType   String   // laptop, desktop, phone, sim, access_card, software_license
+  assetName   String
+  assetCode   String?
+  serialNumber String?
+  allocatedAt DateTime @default(now())
+  returnedAt  DateTime?
+  status      String   @default("allocated") // allocated, returned, damaged, lost
+  notes       String?
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==================== TRAVEL & EXPENSE ====================
+
+model TravelRequest {
+  id              String   @id @default(cuid())
+  purpose         String
+  destination     String
+  departureDate   DateTime
+  returnDate      DateTime
+  estimatedCost   Float?
+  approvedCost    Float?
+  status          String   @default("pending") // pending, approved, rejected, completed, cancelled
+  employeeId      String
+  employee        Employee @relation(fields: [employeeId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ExpenseClaim {
+  id          String   @id @default(cuid())
+  type        String   // travel, food, accommodation, communication, other
+  amount      Float
+  description String?
+  receipt     String?
+  status      String   @default("pending") // pending, approved, rejected, reimbursed
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==================== LEARNING ====================
+
+model LearningRecord {
+  id          String   @id @default(cuid())
+  courseName  String
+  provider    String?
+  type        String   @default("e_learning") // e_learning, classroom, certification, workshop
+  status      String   @default("enrolled") // enrolled, in_progress, completed, expired
+  completedAt DateTime?
+  score       Int?
+  certificate String?
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==================== HELPDESK ====================
+
+model Ticket {
+  id          String   @id @default(cuid())
+  subject     String
+  description String?
+  category    String   // hr, it, payroll, admin, other
+  priority    String   @default("medium") // low, medium, high, urgent
+  status      String   @default("open") // open, in_progress, resolved, closed
+  resolution  String?
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==================== CLIENT/VENDOR ECOSYSTEM ====================
+
+model Client {
+  id            String   @id @default(cuid())
+  name          String
+  email         String?
+  phone         String?
+  clientCompany String?
+  industry      String?
+  contractStart DateTime?
+  contractEnd   DateTime?
+  status        String   @default("active") // active, inactive, suspended
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Vendor {
+  id             String   @id @default(cuid())
+  name           String
+  email          String?
+  phone          String?
+  vendorCompany  String?
+  serviceType    String?  // recruitment, staffing, payroll, bgv, training
+  status         String   @default("active") // active, inactive, suspended
+  rating         Float?
+  companyId      String
+  company        Company  @relation(fields: [companyId], references: [id])
+  subVendors     SubVendor[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model SubVendor {
+  id          String   @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  company     String?
+  status      String   @default("active")
+  vendorId    String
+  vendor      Vendor   @relation(fields: [vendorId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==================== AUDIT ====================
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  entity      String
+  entityId    String?
+  details     String?
+  userId      String?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+}
