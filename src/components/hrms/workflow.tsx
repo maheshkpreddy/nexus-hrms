@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Workflow, Play, Pause, Plus, Zap, ArrowRight, CheckCircle2,
+  WorkflowIcon, Play, Pause, Plus, Zap, ArrowRight, CheckCircle2,
   Clock, Settings, GripVertical, Eye, BarChart3
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -70,7 +70,7 @@ export function Workflow() {
           <Card>
             <CardContent className="p-8">
               <div className="border-2 border-dashed border-emerald-300 dark:border-emerald-700 rounded-xl p-8 text-center bg-emerald-50/50 dark:bg-emerald-950/10">
-                <Workflow className="h-16 w-16 mx-auto text-emerald-400 mb-4" />
+                <WorkflowIcon className="h-16 w-16 mx-auto text-emerald-400 mb-4" />
                 <h3 className="text-lg font-semibold mb-2">Drag & Drop Workflow Builder</h3>
                 <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
                   Build automated workflows by dragging action blocks, conditions, and triggers onto the canvas.

@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import {
   LayoutDashboard, Users, UserPlus, Briefcase, Globe, Bot,
   Clock, CalendarDays, DollarSign, TrendingUp, GraduationCap,
-  Heart, Headphones, Plane, Monitor, ShieldCheck, Workflow,
+  Heart, Headphones, Plane, Monitor, ShieldCheck, WorkflowIcon,
   Building2, Truck, UserCog, BarChart3, MessageSquare, UserMinus,
   Building, ClipboardList, Settings, ChevronLeft, ChevronRight,
   Hexagon
@@ -82,7 +82,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     label: 'AUTOMATION',
     items: [
-      { key: 'workflow', label: 'Workflow Builder', icon: <Workflow className="h-4 w-4" /> },
+      { key: 'workflow', label: 'Workflow Builder', icon: <WorkflowIcon className="h-4 w-4" /> },
     ],
   },
   {
