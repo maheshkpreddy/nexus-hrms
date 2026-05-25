@@ -13,7 +13,7 @@ import {
   Clock, CalendarDays, DollarSign, TrendingUp, GraduationCap,
   Heart, Headphones, Plane, Monitor, ShieldCheck, Workflow,
   Building2, Truck, UserCog, BarChart3, MessageSquare, UserMinus,
-  Office, ClipboardList, Settings, ChevronLeft, ChevronRight,
+  Building, ClipboardList, Settings, ChevronLeft, ChevronRight,
   Hexagon
 } from 'lucide-react';
 
@@ -114,7 +114,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     label: 'ADMIN',
     items: [
-      { key: 'companies', label: 'Companies', icon: <Office className="h-4 w-4" /> },
+      { key: 'companies', label: 'Companies', icon: <Building className="h-4 w-4" /> },
       { key: 'audit_logs', label: 'Audit Logs', icon: <ClipboardList className="h-4 w-4" /> },
       { key: 'settings', label: 'Settings', icon: <Settings className="h-4 w-4" /> },
     ],

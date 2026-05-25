@@ -11,8 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Office, Plus, Building2, Users, MapPin, Globe,
-  Edit, Eye, ChevronRight
+  Building, Plus, Building2, Users, MapPin, Globe,
+  Pencil, Eye, ChevronRight
 } from 'lucide-react';
 
 const BRANCHES: Record<string, { name: string; location: string; employees: number }[]> = {
@@ -82,7 +82,7 @@ export function Companies() {
                     <Eye className="h-3.5 w-3.5" />
                   </Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <Edit className="h-3.5 w-3.5" />
+                    <Pencil className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
@@ -113,7 +113,7 @@ export function Companies() {
                   <Badge variant="secondary" className="text-[10px]">
                     <Users className="h-3 w-3 mr-1" />{branch.employees}
                   </Badge>
-                  <Button variant="ghost" size="sm"><Edit className="h-3.5 w-3.5" /></Button>
+                  <Button variant="ghost" size="sm"><Pencil className="h-3.5 w-3.5" /></Button>
                 </div>
               </div>
             ))}
