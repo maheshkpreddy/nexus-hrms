@@ -98,28 +98,32 @@ export const useAppStore = create<AppState>((set, get) => ({
         return;
       }
       
+      const apiUser = data.user;
+      const apiEmployee = apiUser.employee;
+      const apiCompany = apiUser.company;
+
       const user: AuthUser = {
-        id: data.user.id,
-        email: data.user.email,
-        name: data.user.name,
-        role: data.user.role as UserRole,
-        companyId: data.user.companyId,
-        avatar: data.user.avatar,
-        employeeId: data.employee?.employeeId,
-        employeeName: data.employee ? `${data.employee.firstName} ${data.employee.lastName}` : data.user.name,
-        companyName: data.company?.name,
-        companyCode: data.company?.code,
-        companyCurrency: data.company?.currency,
+        id: apiUser.id,
+        email: apiUser.email,
+        name: apiUser.name,
+        role: apiUser.role as UserRole,
+        companyId: apiUser.companyId,
+        avatar: apiUser.avatar,
+        employeeId: apiEmployee?.employeeId,
+        employeeName: apiEmployee ? `${apiEmployee.firstName} ${apiEmployee.lastName}` : apiUser.name,
+        companyName: apiCompany?.name,
+        companyCode: apiCompany?.code,
+        companyCurrency: apiCompany?.currency,
       };
       
-      // Find matching demo company or create from API data
-      const company = data.company ? {
-        id: data.company.id,
-        name: data.company.name,
-        code: data.company.code,
-        industry: data.company.industry || '',
-        country: data.company.country || '',
-        currency: data.company.currency,
+      // Use company from API data, or fall back to demo company
+      const company = apiCompany ? {
+        id: apiCompany.id,
+        name: apiCompany.name,
+        code: apiCompany.code || '',
+        industry: apiCompany.industry || '',
+        country: apiCompany.country || '',
+        currency: apiCompany.currency || 'USD',
         employeeCount: 0,
         isActive: true,
       } : DEMO_COMPANIES[0];
