@@ -394,7 +394,7 @@ export function Compliance() {
                     <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
                     <div>
                       <p className="text-sm font-medium">{doc.type}</p>
-                      <p className="text-xs text-muted-foreground">Retention: {doc.retention} · {doc.documents.toLocaleString()} documents</p>
+                      <p className="text-xs text-muted-foreground">Retention: {doc.retention} · {(doc.documents ?? 0).toLocaleString()} documents</p>
                     </div>
                   </div>
                   <Badge className={`text-[10px] ${

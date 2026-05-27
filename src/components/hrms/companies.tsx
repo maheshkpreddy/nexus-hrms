@@ -141,7 +141,7 @@ export function Companies() {
                   <MapPin className="h-3.5 w-3.5" /> {company.country} · {company.currency}
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <Users className="h-3.5 w-3.5" /> {company.employeeCount.toLocaleString()} employees
+                  <Users className="h-3.5 w-3.5" /> {(company.employeeCount ?? 0).toLocaleString()} employees
                 </div>
               </div>
               <div className="flex items-center justify-between mt-3">
@@ -193,7 +193,7 @@ export function Companies() {
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-lg border border-border">
                     <span className="text-sm">Employees</span>
-                    <span className="text-sm text-muted-foreground">{comp.employeeCount.toLocaleString()}</span>
+                    <span className="text-sm text-muted-foreground">{(comp.employeeCount ?? 0).toLocaleString()}</span>
                   </div>
                 </div>
               );

@@ -64,9 +64,10 @@ const SALARY_DISTRIBUTION = [
 const DEPT_COLORS = ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#6b7280', '#ec4899', '#14b8a6', '#a855f7'];
 
 function formatMonth(monthStr: string): string {
+  if (!monthStr) return '';
   const [year, month] = monthStr.split('-');
   const date = new Date(parseInt(year), parseInt(month) - 1);
-  return date.toLocaleString('en-US', { month: 'short' });
+  return isNaN(date.getTime()) ? monthStr : date.toLocaleString('en-US', { month: 'short' });
 }
 
 function ChartSkeleton() {

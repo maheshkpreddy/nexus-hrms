@@ -144,7 +144,7 @@ export function Payroll() {
               <Wallet className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold">${totalGross.toLocaleString()}</p>
+              <p className="text-2xl font-bold">${(totalGross ?? 0).toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">Gross Salary</p>
             </div>
           </CardContent>
@@ -155,7 +155,7 @@ export function Payroll() {
               <TrendingDown className="h-5 w-5 text-red-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold">${totalDeductions.toLocaleString()}</p>
+              <p className="text-2xl font-bold">${(totalDeductions ?? 0).toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">Total Deductions</p>
             </div>
           </CardContent>
@@ -166,7 +166,7 @@ export function Payroll() {
               <DollarSign className="h-5 w-5 text-teal-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold">${totalPayout.toLocaleString()}</p>
+              <p className="text-2xl font-bold">${(totalPayout ?? 0).toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">Net Payout</p>
             </div>
           </CardContent>

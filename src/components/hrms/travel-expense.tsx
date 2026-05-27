@@ -329,7 +329,7 @@ export function TravelExpense() {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value: number) => [`$${value.toLocaleString()}`, 'Amount']} />
+                    <Tooltip formatter={(value: number) => [`$${(value ?? 0).toLocaleString()}`, 'Amount']} />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
@@ -345,7 +345,7 @@ export function TravelExpense() {
                     <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                     <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                     <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip formatter={(value: number) => [`$${value.toLocaleString()}`, 'Expense']} />
+                    <Tooltip formatter={(value: number) => [`$${(value ?? 0).toLocaleString()}`, 'Expense']} />
                     <Bar dataKey="amount" fill="#059669" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>

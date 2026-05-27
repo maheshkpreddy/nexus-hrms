@@ -260,7 +260,7 @@ export function VendorPortal() {
                         <TableCell className="font-mono text-xs">{inv.id}</TableCell>
                         <TableCell className="font-medium">{inv.vendor}</TableCell>
                         <TableCell className="text-xs">{inv.services}</TableCell>
-                        <TableCell>${inv.amount.toLocaleString()}</TableCell>
+                        <TableCell>${(inv.amount ?? 0).toLocaleString()}</TableCell>
                         <TableCell>{inv.date}</TableCell>
                         <TableCell>
                           <Badge className={`text-[10px] ${inv.status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>

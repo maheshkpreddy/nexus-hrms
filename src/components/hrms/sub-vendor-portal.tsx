@@ -388,8 +388,8 @@ export function SubVendorPortal() {
                   <div className="flex items-center gap-4">
                     <div className="flex-1">
                       <div className="flex items-center justify-between text-xs mb-1">
-                        <span>Earned: ${comm.earned.toLocaleString()}</span>
-                        <span className="text-emerald-600">Paid: ${comm.paid.toLocaleString()}</span>
+                        <span>Earned: ${(comm.earned ?? 0).toLocaleString()}</span>
+                        <span className="text-emerald-600">Paid: ${(comm.paid ?? 0).toLocaleString()}</span>
                       </div>
                       <div className="w-full bg-muted rounded-full h-2">
                         <div

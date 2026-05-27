@@ -33,16 +33,26 @@ const AI_INSIGHTS = [
   { title: 'Skill Gap Detected', description: 'Cloud Architecture skills deficit in Engineering. Suggest upskilling program.', severity: 'low' },
 ];
 
+const DEPT_COLORS = ['#059669', '#0d9488', '#0891b2', '#6366f1', '#8b5cf6', '#a855f7', '#ec4899', '#f43f5e', '#f97316', '#eab308'];
+
+// Safe toLocaleString helper
+function safeLocaleString(val: unknown): string {
+  if (val == null || val === undefined) return '0';
+  if (typeof val === 'number') return val.toLocaleString();
+  return String(val);
+}
+
 interface DashboardData {
-  totalEmployees: number;
-  activeEmployees: number;
-  newHires: number;
-  openPositions: number;
-  attritionRate: number;
-  attendanceRate: number;
-  pendingApprovals: number;
-  departmentDistribution: { name: string; value: number; color: string }[];
-  recentActivities: { id: string; action: string; entity: string; details: string; createdAt: string }[];
+  stats: {
+    totalEmployees: number;
+    newHires: number;
+    openPositions: number;
+    attendanceRate: number;
+    pendingApprovals: number;
+    unreadNotifications: number;
+  };
+  recentActivities: { id: string; action: string; entity: string; details: string; createdAt: string; user?: { name: string; email: string } }[];
+  departmentStats: { departmentId: string; departmentName: string; count: number }[];
 }
 
 export function Dashboard() {
@@ -50,6 +60,7 @@ export function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [analyticsData, setAnalyticsData] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -59,10 +70,12 @@ export function Dashboard() {
           getDashboardStats(companyId),
           getAnalytics(companyId),
         ]);
-        setData(dashboardRes as DashboardData);
+        setData(dashboardRes as unknown as DashboardData);
         setAnalyticsData(analyticsRes as Record<string, unknown>);
+        setError(null);
       } catch (err) {
         console.error('Dashboard fetch error:', err);
+        setError('Failed to load dashboard data');
       } finally {
         setLoading(false);
       }
@@ -79,36 +92,64 @@ export function Dashboard() {
     );
   }
 
-  const kpiCards = data ? [
-    { label: 'Total Employees', value: data.totalEmployees.toLocaleString(), change: 4.2, icon: Users, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/30' },
-    { label: 'New Hires (This Month)', value: String(data.newHires), change: 12.5, icon: UserPlus, color: 'text-teal-600', bg: 'bg-teal-50 dark:bg-teal-950/30' },
-    { label: 'Open Positions', value: String(data.openPositions), change: -8.3, icon: Briefcase, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/30' },
-    { label: 'Attrition Rate', value: `${data.attritionRate}%`, change: -0.8, icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50 dark:bg-red-950/30' },
-    { label: 'Attendance Today', value: `${data.attendanceRate}%`, change: 1.2, icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/30' },
-    { label: 'Pending Approvals', value: String(data.pendingApprovals), change: -25, icon: CheckSquare, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-950/30' },
-  ] : [];
+  if (error && !data) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">{error}</p>
+      </div>
+    );
+  }
 
-  const deptData = data?.departmentDistribution || [];
-  const headcountData = (analyticsData as Record<string, Record<string, unknown>> | null)?.headcount as { months: string[]; values: number[] } | undefined;
-  const hiringData = (analyticsData as Record<string, Record<string, unknown>> | null)?.hiring as { months: string[]; applied: number[]; interviewed: number[]; hired: number[] } | undefined;
-  const payrollCostData = (analyticsData as Record<string, Record<string, unknown>> | null)?.payrollCost as { months: string[]; values: number[] } | undefined;
+  const stats = data?.stats;
+  const totalEmployees = stats?.totalEmployees ?? 0;
+  const newHires = stats?.newHires ?? 0;
+  const openPositions = stats?.openPositions ?? 0;
+  const attendanceRate = stats?.attendanceRate ?? 0;
+  const pendingApprovals = stats?.pendingApprovals ?? 0;
+  const attritionRate = (analyticsData as Record<string, Record<string, unknown>> | null)?.attrition
+    ? Number(((analyticsData as Record<string, Record<string, unknown>>)?.attrition as Record<string, unknown>)?.rate ?? 0)
+    : 0;
 
-  const headcountChart = headcountData
-    ? headcountData.months.map((m: string, i: number) => ({ name: m, count: headcountData.values[i] }))
+  const kpiCards = [
+    { label: 'Total Employees', value: safeLocaleString(totalEmployees), change: 4.2, icon: Users, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/30' },
+    { label: 'New Hires (This Month)', value: safeLocaleString(newHires), change: 12.5, icon: UserPlus, color: 'text-teal-600', bg: 'bg-teal-50 dark:bg-teal-950/30' },
+    { label: 'Open Positions', value: safeLocaleString(openPositions), change: -8.3, icon: Briefcase, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/30' },
+    { label: 'Attrition Rate', value: `${attritionRate}%`, change: -0.8, icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50 dark:bg-red-950/30' },
+    { label: 'Attendance Today', value: `${attendanceRate}%`, change: 1.2, icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/30' },
+    { label: 'Pending Approvals', value: safeLocaleString(pendingApprovals), change: -25, icon: CheckSquare, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-950/30' },
+  ];
+
+  // Convert departmentStats to chart format with colors
+  const deptData = (data?.departmentStats || []).map((d, i) => ({
+    name: d.departmentName || 'Unknown',
+    value: d.count || 0,
+    color: DEPT_COLORS[i % DEPT_COLORS.length],
+  }));
+
+  // Analytics charts
+  const headcountTrends = (analyticsData as Record<string, unknown> | null)?.headcountTrends as { month: string; count: number }[] | undefined;
+  const hiringFunnel = (analyticsData as Record<string, unknown> | null)?.hiringFunnel as { applications: number; screened: number; interviewed: number; offered: number; hired: number } | undefined;
+  const payrollCosts = (analyticsData as Record<string, unknown> | null)?.payrollCosts as { month: string; totalGross: number; totalNet: number; totalDeductions: number }[] | undefined;
+
+  const headcountChart = headcountTrends
+    ? headcountTrends.map((h) => ({ name: h.month, count: h.count ?? 0 }))
     : [];
 
-  const hiringChart = hiringData
-    ? hiringData.months.map((m: string, i: number) => ({
-        name: m,
-        Applied: hiringData.applied[i],
-        Interviewed: hiringData.interviewed[i],
-        Hired: hiringData.hired[i],
-      }))
+  const hiringChartData = hiringFunnel
+    ? [
+        { name: 'Applied', value: hiringFunnel.applications ?? 0 },
+        { name: 'Screened', value: hiringFunnel.screened ?? 0 },
+        { name: 'Interviewed', value: hiringFunnel.interviewed ?? 0 },
+        { name: 'Offered', value: hiringFunnel.offered ?? 0 },
+        { name: 'Hired', value: hiringFunnel.hired ?? 0 },
+      ]
     : [];
 
-  const payrollChart = payrollCostData
-    ? payrollCostData.months.map((m: string, i: number) => ({ name: m, cost: payrollCostData.values[i] }))
+  const payrollChart = payrollCosts
+    ? payrollCosts.map((p) => ({ name: p.month, cost: (p.totalGross ?? 0) / 1000 }))
     : [];
+
+  const recentActivities = data?.recentActivities || [];
 
   return (
     <div className="space-y-6">
@@ -215,17 +256,14 @@ export function Dashboard() {
             <CardDescription>Application to hire conversion</CardDescription>
           </CardHeader>
           <CardContent>
-            {hiringChart.length > 0 ? (
+            {hiringChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={hiringChart}>
+                <BarChart data={hiringChartData}>
                   <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                   <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip />
-                  <Legend />
-                  <Bar dataKey="Applied" fill="#94a3b8" radius={[2, 2, 0, 0]} />
-                  <Bar dataKey="Interviewed" fill="#f59e0b" radius={[2, 2, 0, 0]} />
-                  <Bar dataKey="Hired" fill="#059669" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="value" fill="#059669" radius={[2, 2, 0, 0]} name="Candidates" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -238,7 +276,7 @@ export function Dashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Payroll Cost Trend</CardTitle>
-            <CardDescription>Monthly payroll expenditure</CardDescription>
+            <CardDescription>Monthly payroll expenditure (in thousands)</CardDescription>
           </CardHeader>
           <CardContent>
             {payrollChart.length > 0 ? (
@@ -247,7 +285,7 @@ export function Dashboard() {
                   <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                   <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(value: number) => [`$${value}M`, 'Cost']} />
+                  <Tooltip formatter={(value: number) => [`$${safeLocaleString(value)}K`, 'Cost']} />
                   <Area type="monotone" dataKey="cost" stroke="#059669" fill="#059669" fillOpacity={0.2} strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
@@ -293,9 +331,9 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className="max-h-72 overflow-y-auto">
             <div className="space-y-3">
-              {(data?.recentActivities || []).length > 0 ? (
-                data!.recentActivities.map((activity) => (
-                  <div key={activity.id} className="flex items-start gap-2">
+              {recentActivities.length > 0 ? (
+                recentActivities.map((activity, idx) => (
+                  <div key={activity.id || idx} className="flex items-start gap-2">
                     <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
                       activity.action === 'CREATE' ? 'bg-emerald-500' :
                       activity.action === 'UPDATE' ? 'bg-amber-500' :
@@ -303,7 +341,9 @@ export function Dashboard() {
                     }`} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm leading-snug">{activity.details || `${activity.action} on ${activity.entity}`}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{new Date(activity.createdAt).toLocaleString()}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {activity.createdAt ? new Date(activity.createdAt).toLocaleString() : 'Just now'}
+                      </p>
                     </div>
                   </div>
                 ))

@@ -59,6 +59,73 @@ const MODULE_COMPONENTS: Record<string, React.ComponentType> = {
   onboarding: Onboarding,
 };
 
+// Per-module error boundary so one crashing module doesn't take down the whole app
+interface ModuleErrorBoundaryProps {
+  children: React.ReactNode;
+  moduleName: string;
+}
+
+interface ModuleErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ModuleErrorBoundary extends React.Component<ModuleErrorBoundaryProps, ModuleErrorBoundaryState> {
+  constructor(props: ModuleErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error(`Module "${this.props.moduleName}" error:`, error, errorInfo);
+  }
+
+  handleRetry = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center h-64 gap-4 p-6">
+          <div className="text-center space-y-2">
+            <h3 className="text-lg font-semibold text-destructive">Module Error</h3>
+            <p className="text-sm text-muted-foreground">
+              The {this.props.moduleName} module encountered an error.
+            </p>
+            {this.state.error && (
+              <details className="text-left bg-muted p-3 rounded-md text-xs text-muted-foreground max-w-md mx-auto">
+                <summary className="cursor-pointer font-medium">Error details</summary>
+                <pre className="mt-2 whitespace-pre-wrap">{this.state.error.message}</pre>
+              </details>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={this.handleRetry}
+              className="px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            >
+              Retry
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-3 py-1.5 text-sm border border-border rounded-md hover:bg-muted"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 export function HRMSLayout() {
   const { activeModule, sidebarCollapsed, darkMode } = useAppStore();
 
@@ -73,7 +140,9 @@ export function HRMSLayout() {
       )}>
         <Header />
         <main className="p-4 md:p-6">
-          <ActiveComponent />
+          <ModuleErrorBoundary moduleName={activeModule}>
+            <ActiveComponent />
+          </ModuleErrorBoundary>
         </main>
       </div>
     </div>
