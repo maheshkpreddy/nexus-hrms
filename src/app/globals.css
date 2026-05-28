@@ -120,3 +120,34 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Always-visible sidebar scrollbar */
+aside [data-slot="scroll-area-scrollbar"] {
+  opacity: 0.6 !important;
+  transition: opacity 0.2s;
+}
+aside [data-slot="scroll-area-scrollbar"]:hover {
+  opacity: 1 !important;
+}
+aside [data-slot="scroll-area-thumb"] {
+  background: oklch(0.7 0 0) !important;
+  min-height: 40px;
+}
+.dark aside [data-slot="scroll-area-thumb"] {
+  background: oklch(0.4 0 0) !important;
+}
+
+/* Custom scrollbar for content areas */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: oklch(0.8 0 0);
+  border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.6 0 0);
+}

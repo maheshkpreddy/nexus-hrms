@@ -30,6 +30,7 @@ import { Alumni } from './alumni';
 import { Companies } from './companies';
 import { Settings } from './settings';
 import { Onboarding } from './onboarding';
+import { HelpTraining } from './help-training';
 
 const MODULE_COMPONENTS: Record<string, React.ComponentType> = {
   dashboard: Dashboard,
@@ -57,6 +58,7 @@ const MODULE_COMPONENTS: Record<string, React.ComponentType> = {
   companies: Companies,
   settings: Settings,
   onboarding: Onboarding,
+  help_training: HelpTraining,
 };
 
 // Per-module error boundary so one crashing module doesn't take down the whole app

@@ -21,11 +21,7 @@ export function LoginScreen() {
   const { login, isLoading, authError } = useAppStore();
   const [email, setEmail] = useState('raj.p@techcorp.com');
   const [password, setPassword] = useState('raj123');
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const [mounted, setMounted] = useState(true);
 
   const handleLogin = async () => {
     if (email && password) {

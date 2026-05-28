@@ -52,29 +52,39 @@ export async function GET(req: NextRequest) {
 
     const demoItems = [
       {
-        id: 'demo-comp1', title: 'Annual Safety Training', description: 'Complete mandatory workplace safety training',
+        id: 'comp-1', title: 'Annual Safety Training', description: 'Complete mandatory workplace safety training',
         category: 'safety', dueDate: new Date('2025-04-01'), status: 'pending', assignee: 'HR Department',
-        companyId: companyId || 'demo-co', createdAt: new Date('2025-01-15'), updatedAt: new Date('2025-01-15'),
+        companyId: companyId || 'comp-1', createdAt: new Date('2025-01-15'), updatedAt: new Date('2025-01-15'),
       },
       {
-        id: 'demo-comp2', title: 'Data Privacy Compliance', description: 'Ensure GDPR and data privacy compliance',
+        id: 'comp-2', title: 'Data Privacy Compliance', description: 'Ensure GDPR and data privacy compliance across all systems',
         category: 'legal', dueDate: new Date('2025-03-15'), status: 'completed', assignee: 'Legal Team',
-        companyId: companyId || 'demo-co', createdAt: new Date('2025-01-10'), updatedAt: new Date('2025-02-20'),
+        companyId: companyId || 'comp-1', createdAt: new Date('2025-01-10'), updatedAt: new Date('2025-02-20'),
       },
       {
-        id: 'demo-comp3', title: 'Fire Drill Certification', description: 'Annual fire drill and evacuation certification',
+        id: 'comp-3', title: 'Fire Drill Certification', description: 'Annual fire drill and evacuation certification for all branches',
         category: 'safety', dueDate: new Date('2025-02-01'), status: 'overdue', assignee: 'Facilities',
-        companyId: companyId || 'demo-co', createdAt: new Date('2025-01-01'), updatedAt: new Date('2025-01-01'),
+        companyId: companyId || 'comp-1', createdAt: new Date('2025-01-01'), updatedAt: new Date('2025-01-01'),
       },
       {
-        id: 'demo-comp4', title: 'Financial Audit 2025', description: 'Complete annual financial audit requirements',
+        id: 'comp-4', title: 'Financial Audit 2025', description: 'Complete annual financial audit requirements for FY2024-25',
         category: 'financial', dueDate: new Date('2025-06-30'), status: 'pending', assignee: 'Finance Team',
-        companyId: companyId || 'demo-co', createdAt: new Date('2025-02-01'), updatedAt: new Date('2025-02-01'),
+        companyId: companyId || 'comp-1', createdAt: new Date('2025-02-01'), updatedAt: new Date('2025-02-01'),
       },
       {
-        id: 'demo-comp5', title: 'Employee Handbook Update', description: 'Update employee handbook with new policies',
+        id: 'comp-5', title: 'Employee Handbook Update', description: 'Update employee handbook with new policies and benefits',
         category: 'hr', dueDate: new Date('2025-05-01'), status: 'in_progress', assignee: 'HR Department',
-        companyId: companyId || 'demo-co', createdAt: new Date('2025-02-10'), updatedAt: new Date('2025-02-15'),
+        companyId: companyId || 'comp-1', createdAt: new Date('2025-02-10'), updatedAt: new Date('2025-02-15'),
+      },
+      {
+        id: 'comp-6', title: 'ISO 27001 Recertification', description: 'Information security management system recertification audit',
+        category: 'legal', dueDate: new Date('2025-09-30'), status: 'pending', assignee: 'IT Security',
+        companyId: companyId || 'comp-1', createdAt: new Date('2025-03-01'), updatedAt: new Date('2025-03-01'),
+      },
+      {
+        id: 'comp-7', title: 'Sexual Harassment Prevention Training', description: 'Mandatory POSH training for all employees',
+        category: 'hr', dueDate: new Date('2025-03-31'), status: 'in_progress', assignee: 'HR Department',
+        companyId: companyId || 'comp-1', createdAt: new Date('2025-02-15'), updatedAt: new Date('2025-03-01'),
       },
     ];
 

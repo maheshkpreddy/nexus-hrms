@@ -14,7 +14,7 @@ import {
   Heart, Headphones, Plane, Monitor, ShieldCheck, WorkflowIcon,
   Building2, Truck, UserCog, BarChart3, MessageSquare, UserMinus,
   Building, ClipboardList, Settings, ChevronLeft, ChevronRight,
-  Hexagon
+  Hexagon, BookOpen, Video, FileText
 } from 'lucide-react';
 
 interface NavSection {
@@ -119,23 +119,29 @@ const NAV_SECTIONS: NavSection[] = [
       { key: 'settings', label: 'Settings', icon: <Settings className="h-4 w-4" /> },
     ],
   },
+  {
+    label: 'HELP & TRAINING',
+    items: [
+      { key: 'help_training', label: 'Help & Training', icon: <BookOpen className="h-4 w-4" /> },
+    ],
+  },
 ];
 
 const ROLE_VISIBILITY: Record<UserRole, ModuleKey[]> = {
   super_admin: NAV_SECTIONS.flatMap(s => s.items.map(i => i.key)),
-  company_hr_admin: ['dashboard', 'employees', 'onboarding', 'recruitment', 'job_portal', 'ai_interview', 'attendance', 'leave', 'payroll', 'performance', 'learning', 'engagement', 'helpdesk', 'travel_expense', 'assets', 'compliance', 'workflow', 'client_portal', 'vendor_portal', 'analytics', 'ai_chatbot', 'alumni', 'settings'],
-  hr_executive: ['dashboard', 'employees', 'onboarding', 'recruitment', 'job_portal', 'ai_interview', 'attendance', 'leave', 'performance', 'learning', 'engagement', 'helpdesk', 'assets', 'compliance', 'analytics', 'ai_chatbot', 'alumni', 'settings'],
-  dept_head: ['dashboard', 'employees', 'recruitment', 'attendance', 'leave', 'performance', 'learning', 'engagement', 'helpdesk', 'travel_expense', 'assets', 'analytics', 'ai_chatbot', 'settings'],
-  reporting_manager: ['dashboard', 'employees', 'recruitment', 'attendance', 'leave', 'performance', 'learning', 'engagement', 'helpdesk', 'travel_expense', 'analytics', 'ai_chatbot', 'settings'],
-  employee: ['dashboard', 'attendance', 'leave', 'payroll', 'performance', 'learning', 'engagement', 'helpdesk', 'travel_expense', 'assets', 'job_portal', 'ai_chatbot', 'settings'],
-  finance: ['dashboard', 'employees', 'payroll', 'travel_expense', 'analytics', 'ai_chatbot', 'settings'],
-  it_admin: ['dashboard', 'employees', 'assets', 'compliance', 'workflow', 'analytics', 'ai_chatbot', 'settings'],
-  recruiter: ['dashboard', 'recruitment', 'job_portal', 'ai_interview', 'analytics', 'ai_chatbot', 'settings'],
-  vendor: ['dashboard', 'vendor_portal', 'ai_chatbot', 'settings'],
-  sub_vendor: ['dashboard', 'sub_vendor_portal', 'ai_chatbot', 'settings'],
-  client: ['dashboard', 'client_portal', 'ai_chatbot', 'settings'],
-  auditor: ['dashboard', 'analytics', 'compliance', 'ai_chatbot', 'settings'],
-  job_seeker: ['dashboard', 'job_portal', 'ai_interview', 'ai_chatbot', 'settings'],
+  company_hr_admin: ['dashboard', 'employees', 'onboarding', 'recruitment', 'job_portal', 'ai_interview', 'attendance', 'leave', 'payroll', 'performance', 'learning', 'engagement', 'helpdesk', 'travel_expense', 'assets', 'compliance', 'workflow', 'client_portal', 'vendor_portal', 'analytics', 'ai_chatbot', 'alumni', 'settings', 'help_training'],
+  hr_executive: ['dashboard', 'employees', 'onboarding', 'recruitment', 'job_portal', 'ai_interview', 'attendance', 'leave', 'performance', 'learning', 'engagement', 'helpdesk', 'assets', 'compliance', 'analytics', 'ai_chatbot', 'alumni', 'settings', 'help_training'],
+  dept_head: ['dashboard', 'employees', 'recruitment', 'attendance', 'leave', 'performance', 'learning', 'engagement', 'helpdesk', 'travel_expense', 'assets', 'analytics', 'ai_chatbot', 'settings', 'help_training'],
+  reporting_manager: ['dashboard', 'employees', 'recruitment', 'attendance', 'leave', 'performance', 'learning', 'engagement', 'helpdesk', 'travel_expense', 'analytics', 'ai_chatbot', 'settings', 'help_training'],
+  employee: ['dashboard', 'attendance', 'leave', 'payroll', 'performance', 'learning', 'engagement', 'helpdesk', 'travel_expense', 'assets', 'job_portal', 'ai_chatbot', 'settings', 'help_training'],
+  finance: ['dashboard', 'employees', 'payroll', 'travel_expense', 'analytics', 'ai_chatbot', 'settings', 'help_training'],
+  it_admin: ['dashboard', 'employees', 'assets', 'compliance', 'workflow', 'analytics', 'ai_chatbot', 'settings', 'help_training'],
+  recruiter: ['dashboard', 'recruitment', 'job_portal', 'ai_interview', 'analytics', 'ai_chatbot', 'settings', 'help_training'],
+  vendor: ['dashboard', 'vendor_portal', 'ai_chatbot', 'settings', 'help_training'],
+  sub_vendor: ['dashboard', 'sub_vendor_portal', 'ai_chatbot', 'settings', 'help_training'],
+  client: ['dashboard', 'client_portal', 'ai_chatbot', 'settings', 'help_training'],
+  auditor: ['dashboard', 'analytics', 'compliance', 'ai_chatbot', 'settings', 'help_training'],
+  job_seeker: ['dashboard', 'job_portal', 'ai_interview', 'ai_chatbot', 'settings', 'help_training'],
 };
 
 export function Sidebar() {
@@ -181,7 +187,7 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <ScrollArea className="flex-1 py-2">
+        <ScrollArea className="flex-1 py-2" style={{ overflow: 'hidden' }}>
           <nav className="px-2 space-y-1">
             {filteredSections.map((section) => (
               <div key={section.label} className="mb-2">

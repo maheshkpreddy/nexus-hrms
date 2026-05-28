@@ -91,6 +91,14 @@ export function Employees() {
   });
 
   const handleAddEmployee = async () => {
+    if (!form.firstName || !form.lastName || !form.email || !form.designation) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    if (!form.departmentId) {
+      toast.error('Please select a department');
+      return;
+    }
     try {
       setSubmitting(true);
       const empId = `EMP${String(Date.now()).slice(-6)}`;
@@ -100,8 +108,8 @@ export function Employees() {
         companyId: currentCompany?.id,
         joiningDate: new Date().toISOString().split('T')[0],
         status: 'active',
-        departmentId: form.departmentId || undefined,
-        branchId: form.branchId && form.branchId !== '_none' ? form.branchId : undefined,
+        departmentId: form.departmentId,
+        branchId: form.branchId || undefined,
       });
       toast.success('Employee created successfully');
       setShowAddDialog(false);
@@ -375,11 +383,12 @@ export function Employees() {
             </div>
             <div className="space-y-1">
               <Label className="text-sm">Department</Label>
-              <Select value={form.departmentId || undefined} onValueChange={(v) => setForm(f => ({ ...f, departmentId: v }))}>
+              <Select value={form.departmentId || '_none'} onValueChange={(v) => setForm(f => ({ ...f, departmentId: v === '_none' ? '' : v }))}>
                 <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="_none">Select department</SelectItem>
                   {departmentOptions.filter(d => d.id && d.id.trim()).map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
-                  {departmentOptions.length === 0 && <SelectItem value="_none" disabled>No departments found</SelectItem>}
+                  {departmentOptions.length === 0 && <SelectItem value="_empty_dept" disabled>No departments found</SelectItem>}
                 </SelectContent>
               </Select>
             </div>
@@ -447,11 +456,12 @@ export function Employees() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-sm">Department</Label>
-                <Select value={editForm.departmentId || undefined} onValueChange={(v) => setEditForm(f => ({ ...f, departmentId: v }))}>
+                <Select value={editForm.departmentId || '_none'} onValueChange={(v) => setEditForm(f => ({ ...f, departmentId: v === '_none' ? '' : v }))}>
                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="_none">None</SelectItem>
                     {departmentOptions.filter(d => d.id && d.id.trim()).map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
-                    {departmentOptions.length === 0 && <SelectItem value="_none" disabled>No departments found</SelectItem>}
+                    {departmentOptions.length === 0 && <SelectItem value="_empty_dept" disabled>No departments found</SelectItem>}
                   </SelectContent>
                 </Select>
               </div>

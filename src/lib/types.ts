@@ -40,7 +40,8 @@ export type ModuleKey =
   | 'settings'
   | 'onboarding'
   | 'companies'
-  | 'audit_logs';
+  | 'audit_logs'
+  | 'help_training';
 
 export interface CompanyInfo {
   id: string;

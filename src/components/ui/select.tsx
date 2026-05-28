@@ -105,7 +105,10 @@ function SelectItem({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Item>) {
   // Radix Select.Item forbids empty string values - guard against it
-  const safeValue = (value === '' || value === undefined || value === null) ? '__empty_placeholder__' : value;
+  if (value === '' || value === undefined || value === null) {
+    console.warn('[SelectItem] Empty/undefined/null value prop detected. This is invalid for Radix Select. Using fallback. Fix the data source.');
+  }
+  const safeValue = (value === '' || value === undefined || value === null) ? `__empty_${Math.random().toString(36).slice(2, 8)}__` : value;
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
