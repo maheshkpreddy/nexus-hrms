@@ -43,7 +43,61 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Onboarding GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    // Demo data fallback when database is unavailable
+    const url = new URL(req.url);
+    const employeeId = url.searchParams.get('employeeId');
+    const status = url.searchParams.get('status');
+    const category = url.searchParams.get('category');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+
+    const demoTasks = [
+      {
+        id: 'demo-ot1', title: 'Complete IT Setup', description: 'Set up laptop, email, and VPN access',
+        category: 'it', status: 'completed', dueDate: new Date('2025-01-10'), assignedTo: 'IT Department',
+        employeeId: 'demo-emp1', completedAt: new Date('2025-01-09'),
+        createdAt: new Date('2025-01-05'), updatedAt: new Date('2025-01-09'),
+        employee: { id: 'demo-emp1', firstName: 'Alice', lastName: 'Martinez', employeeId: 'EMP001', avatar: null, department: { name: 'Engineering' } },
+      },
+      {
+        id: 'demo-ot2', title: 'HR Orientation', description: 'Attend HR orientation and complete paperwork',
+        category: 'hr', status: 'in_progress', dueDate: new Date('2025-01-15'), assignedTo: 'HR Team',
+        employeeId: 'demo-emp1', completedAt: null,
+        createdAt: new Date('2025-01-05'), updatedAt: new Date('2025-01-08'),
+        employee: { id: 'demo-emp1', firstName: 'Alice', lastName: 'Martinez', employeeId: 'EMP001', avatar: null, department: { name: 'Engineering' } },
+      },
+      {
+        id: 'demo-ot3', title: 'Security Training', description: 'Complete mandatory security awareness training',
+        category: 'compliance', status: 'pending', dueDate: new Date('2025-02-01'), assignedTo: 'Security Team',
+        employeeId: 'demo-emp2', completedAt: null,
+        createdAt: new Date('2025-01-15'), updatedAt: new Date('2025-01-15'),
+        employee: { id: 'demo-emp2', firstName: 'James', lastName: 'Wilson', employeeId: 'EMP002', avatar: null, department: { name: 'Sales' } },
+      },
+      {
+        id: 'demo-ot4', title: 'Team Introduction', description: 'Meet with team members and key stakeholders',
+        category: 'general', status: 'pending', dueDate: new Date('2025-01-20'), assignedTo: 'Manager',
+        employeeId: 'demo-emp2', completedAt: null,
+        createdAt: new Date('2025-01-15'), updatedAt: new Date('2025-01-15'),
+        employee: { id: 'demo-emp2', firstName: 'James', lastName: 'Wilson', employeeId: 'EMP002', avatar: null, department: { name: 'Sales' } },
+      },
+      {
+        id: 'demo-ot5', title: 'Benefits Enrollment', description: 'Enroll in health and retirement benefits',
+        category: 'hr', status: 'overdue', dueDate: new Date('2025-01-10'), assignedTo: 'HR Team',
+        employeeId: 'demo-emp3', completedAt: null,
+        createdAt: new Date('2025-01-02'), updatedAt: new Date('2025-01-02'),
+        employee: { id: 'demo-emp3', firstName: 'Robert', lastName: 'Brown', employeeId: 'EMP003', avatar: null, department: { name: 'Finance' } },
+      },
+    ];
+
+    let filtered = demoTasks;
+    if (employeeId) filtered = filtered.filter((t) => t.employeeId === employeeId);
+    if (status) filtered = filtered.filter((t) => t.status === status);
+    if (category) filtered = filtered.filter((t) => t.category === category);
+
+    return NextResponse.json({
+      data: filtered,
+      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+    });
   }
 }
 

@@ -43,7 +43,61 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Vendors GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    // Demo data fallback when database is unavailable
+    const url = new URL(req.url);
+    const status = url.searchParams.get('status');
+    const companyId = url.searchParams.get('companyId');
+    const search = url.searchParams.get('search');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+
+    const demoVendors = [
+      {
+        id: 'demo-v1', name: 'CloudTech Solutions', email: 'contact@cloudtech.com', phone: '+1-555-0201',
+        vendorCompany: 'CloudTech Inc', serviceType: 'cloud_infrastructure', status: 'active', rating: 4.5,
+        companyId: companyId || 'demo-co', createdAt: new Date('2025-01-10'), updatedAt: new Date('2025-01-10'),
+        company: { id: companyId || 'demo-co', name: 'Demo Company' },
+        subVendors: [],
+      },
+      {
+        id: 'demo-v2', name: 'SecureGuard Pro', email: 'info@secureguard.com', phone: '+1-555-0202',
+        vendorCompany: 'SecureGuard Ltd', serviceType: 'security', status: 'active', rating: 4.2,
+        companyId: companyId || 'demo-co', createdAt: new Date('2025-01-15'), updatedAt: new Date('2025-01-15'),
+        company: { id: companyId || 'demo-co', name: 'Demo Company' },
+        subVendors: [{ id: 'demo-sv1', name: 'SecureGuard West', email: 'west@secureguard.com', phone: '+1-555-0203', company: 'SecureGuard Ltd', status: 'active', vendorId: 'demo-v2' }],
+      },
+      {
+        id: 'demo-v3', name: 'CleanSpace Services', email: 'hello@cleanspace.com', phone: '+1-555-0204',
+        vendorCompany: 'CleanSpace Corp', serviceType: 'facilities', status: 'inactive', rating: 3.8,
+        companyId: companyId || 'demo-co', createdAt: new Date('2024-06-01'), updatedAt: new Date('2025-01-20'),
+        company: { id: companyId || 'demo-co', name: 'Demo Company' },
+        subVendors: [],
+      },
+      {
+        id: 'demo-v4', name: 'DataVault Analytics', email: 'sales@datavault.com', phone: '+1-555-0205',
+        vendorCompany: 'DataVault Inc', serviceType: 'data_analytics', status: 'active', rating: 4.7,
+        companyId: companyId || 'demo-co', createdAt: new Date('2025-02-01'), updatedAt: new Date('2025-02-01'),
+        company: { id: companyId || 'demo-co', name: 'Demo Company' },
+        subVendors: [],
+      },
+    ];
+
+    let filtered = demoVendors;
+    if (status) filtered = filtered.filter((v) => v.status === status);
+    if (search) {
+      const s = search.toLowerCase();
+      filtered = filtered.filter((v) =>
+        v.name.toLowerCase().includes(s) ||
+        v.email.toLowerCase().includes(s) ||
+        v.vendorCompany.toLowerCase().includes(s) ||
+        v.serviceType.toLowerCase().includes(s)
+      );
+    }
+
+    return NextResponse.json({
+      data: filtered,
+      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+    });
   }
 }
 

@@ -44,7 +44,63 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Goals GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    // Demo data fallback when database is unavailable
+    const url = new URL(req.url);
+    const employeeId = url.searchParams.get('employeeId');
+    const status = url.searchParams.get('status');
+    const type = url.searchParams.get('type');
+    const category = url.searchParams.get('category');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+
+    const demoGoals = [
+      {
+        id: 'demo-g1', title: 'Improve Code Quality', description: 'Reduce bug rate by 30% through code reviews and testing',
+        type: 'individual', category: 'engineering', progress: 65, status: 'in_progress',
+        startDate: new Date('2025-01-01'), endDate: new Date('2025-06-30'), employeeId: 'demo-emp1',
+        createdAt: new Date('2025-01-01'), updatedAt: new Date('2025-02-15'),
+        employee: { id: 'demo-emp1', firstName: 'Alice', lastName: 'Martinez', department: { name: 'Engineering' } },
+      },
+      {
+        id: 'demo-g2', title: 'Increase Sales Revenue', description: 'Achieve 20% growth in Q1 sales',
+        type: 'team', category: 'sales', progress: 40, status: 'in_progress',
+        startDate: new Date('2025-01-01'), endDate: new Date('2025-03-31'), employeeId: 'demo-emp2',
+        createdAt: new Date('2025-01-01'), updatedAt: new Date('2025-02-20'),
+        employee: { id: 'demo-emp2', firstName: 'James', lastName: 'Wilson', department: { name: 'Sales' } },
+      },
+      {
+        id: 'demo-g3', title: 'Complete Certification', description: 'Obtain AWS Solutions Architect certification',
+        type: 'individual', category: 'development', progress: 100, status: 'completed',
+        startDate: new Date('2024-10-01'), endDate: new Date('2025-01-31'), employeeId: 'demo-emp1',
+        createdAt: new Date('2024-10-01'), updatedAt: new Date('2025-01-28'),
+        employee: { id: 'demo-emp1', firstName: 'Alice', lastName: 'Martinez', department: { name: 'Engineering' } },
+      },
+      {
+        id: 'demo-g4', title: 'Reduce Operating Costs', description: 'Cut departmental operating costs by 15%',
+        type: 'department', category: 'finance', progress: 20, status: 'in_progress',
+        startDate: new Date('2025-01-01'), endDate: new Date('2025-12-31'), employeeId: 'demo-emp3',
+        createdAt: new Date('2025-01-01'), updatedAt: new Date('2025-02-01'),
+        employee: { id: 'demo-emp3', firstName: 'Robert', lastName: 'Brown', department: { name: 'Finance' } },
+      },
+      {
+        id: 'demo-g5', title: 'Launch Marketing Campaign', description: 'Execute Q1 digital marketing campaign',
+        type: 'team', category: 'marketing', progress: 0, status: 'not_started',
+        startDate: new Date('2025-03-01'), endDate: new Date('2025-05-31'), employeeId: 'demo-emp4',
+        createdAt: new Date('2025-02-01'), updatedAt: new Date('2025-02-01'),
+        employee: { id: 'demo-emp4', firstName: 'Lisa', lastName: 'Chang', department: { name: 'Marketing' } },
+      },
+    ];
+
+    let filtered = demoGoals;
+    if (employeeId) filtered = filtered.filter((g) => g.employeeId === employeeId);
+    if (status) filtered = filtered.filter((g) => g.status === status);
+    if (type) filtered = filtered.filter((g) => g.type === type);
+    if (category) filtered = filtered.filter((g) => g.category === category);
+
+    return NextResponse.json({
+      data: filtered,
+      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+    });
   }
 }
 

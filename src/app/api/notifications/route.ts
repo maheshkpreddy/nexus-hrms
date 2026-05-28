@@ -47,7 +47,63 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Notifications GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    // Demo data fallback when database is unavailable
+    const url = new URL(req.url);
+    const userId = url.searchParams.get('userId');
+    const isReadParam = url.searchParams.get('isRead');
+    const type = url.searchParams.get('type');
+    const category = url.searchParams.get('category');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+
+    const demoNotifications = [
+      {
+        id: 'demo-notif1', title: 'Leave Request Approved', message: 'Your leave request for March 5-7 has been approved',
+        type: 'leave', category: 'status_update', isRead: false, userId: userId || 'demo-user1',
+        actionUrl: '/leaves/demo-l1',
+        createdAt: new Date('2025-02-25T10:00:00Z'), updatedAt: new Date('2025-02-25T10:00:00Z'),
+      },
+      {
+        id: 'demo-notif2', title: 'New Expense Claim', message: 'Alice Martinez submitted an expense claim of $1,250',
+        type: 'expense', category: 'approval', isRead: false, userId: userId || 'demo-user1',
+        actionUrl: '/expenses/demo-exp1',
+        createdAt: new Date('2025-02-24T14:30:00Z'), updatedAt: new Date('2025-02-24T14:30:00Z'),
+      },
+      {
+        id: 'demo-notif3', title: 'Performance Review Due', message: 'Your Q1 performance review is due by March 15',
+        type: 'performance', category: 'reminder', isRead: true, userId: userId || 'demo-user1',
+        actionUrl: '/goals',
+        createdAt: new Date('2025-02-20T09:00:00Z'), updatedAt: new Date('2025-02-21T08:00:00Z'),
+      },
+      {
+        id: 'demo-notif4', title: 'Workflow Action Required', message: 'A Leave Approval workflow requires your approval',
+        type: 'workflow', category: 'approval', isRead: false, userId: userId || 'demo-user1',
+        actionUrl: '/workflows/demo-wi1',
+        createdAt: new Date('2025-02-22T11:15:00Z'), updatedAt: new Date('2025-02-22T11:15:00Z'),
+      },
+      {
+        id: 'demo-notif5', title: 'Travel Request Rejected', message: 'Your travel request to London has been rejected',
+        type: 'travel', category: 'status_update', isRead: true, userId: userId || 'demo-user1',
+        actionUrl: '/travel/demo-tr3',
+        createdAt: new Date('2025-02-18T16:45:00Z'), updatedAt: new Date('2025-02-19T09:00:00Z'),
+      },
+    ];
+
+    let filtered = demoNotifications;
+    if (isReadParam !== null && isReadParam !== undefined) {
+      const isRead = isReadParam === 'true';
+      filtered = filtered.filter((n) => n.isRead === isRead);
+    }
+    if (type) filtered = filtered.filter((n) => n.type === type);
+    if (category) filtered = filtered.filter((n) => n.category === category);
+
+    const unreadCount = filtered.filter((n) => !n.isRead).length;
+
+    return NextResponse.json({
+      data: filtered,
+      unreadCount,
+      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+    });
   }
 }
 

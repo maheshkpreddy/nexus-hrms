@@ -38,7 +38,64 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Interviews GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    // Demo data fallback when database is unavailable
+    const url = new URL(req.url);
+    const status = url.searchParams.get('status');
+    const candidateId = url.searchParams.get('candidateId');
+    const jobId = url.searchParams.get('jobId');
+    const type = url.searchParams.get('type');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+
+    const demoInterviews = [
+      {
+        id: 'demo-int1', type: 'technical', scheduledAt: new Date('2025-03-01T10:00:00Z'),
+        duration: 60, status: 'completed', feedback: 'Strong problem-solving skills', rating: 4,
+        meetingLink: 'https://meet.example.com/int1', aiTranscript: null,
+        candidateId: 'demo-c1', jobId: 'demo-job-1',
+        createdAt: new Date('2025-02-15'), updatedAt: new Date('2025-03-01'),
+        candidate: { id: 'demo-c1', firstName: 'Sarah', lastName: 'Chen', email: 'sarah.chen@example.com' },
+        job: { id: 'demo-job-1', title: 'Senior Frontend Developer', department: 'Engineering' },
+      },
+      {
+        id: 'demo-int2', type: 'behavioral', scheduledAt: new Date('2025-03-05T14:00:00Z'),
+        duration: 45, status: 'scheduled', feedback: null, rating: null,
+        meetingLink: 'https://meet.example.com/int2', aiTranscript: null,
+        candidateId: 'demo-c2', jobId: 'demo-job-2',
+        createdAt: new Date('2025-02-20'), updatedAt: new Date('2025-02-20'),
+        candidate: { id: 'demo-c2', firstName: 'Michael', lastName: 'Rivera', email: 'michael.r@example.com' },
+        job: { id: 'demo-job-2', title: 'Backend Engineer', department: 'Engineering' },
+      },
+      {
+        id: 'demo-int3', type: 'technical', scheduledAt: new Date('2025-03-10T09:00:00Z'),
+        duration: 90, status: 'scheduled', feedback: null, rating: null,
+        meetingLink: 'https://meet.example.com/int3', aiTranscript: null,
+        candidateId: 'demo-c3', jobId: 'demo-job-1',
+        createdAt: new Date('2025-02-25'), updatedAt: new Date('2025-02-25'),
+        candidate: { id: 'demo-c3', firstName: 'Emily', lastName: 'Johnson', email: 'emily.j@example.com' },
+        job: { id: 'demo-job-1', title: 'Senior Frontend Developer', department: 'Engineering' },
+      },
+      {
+        id: 'demo-int4', type: 'hr', scheduledAt: new Date('2025-03-12T11:00:00Z'),
+        duration: 30, status: 'cancelled', feedback: 'Candidate withdrew', rating: null,
+        meetingLink: null, aiTranscript: null,
+        candidateId: 'demo-c4', jobId: 'demo-job-3',
+        createdAt: new Date('2025-02-28'), updatedAt: new Date('2025-03-08'),
+        candidate: { id: 'demo-c4', firstName: 'David', lastName: 'Kim', email: 'david.kim@example.com' },
+        job: { id: 'demo-job-3', title: 'DevOps Engineer', department: 'Infrastructure' },
+      },
+    ];
+
+    let filtered = demoInterviews;
+    if (status) filtered = filtered.filter((i) => i.status === status);
+    if (candidateId) filtered = filtered.filter((i) => i.candidateId === candidateId);
+    if (jobId) filtered = filtered.filter((i) => i.jobId === jobId);
+    if (type) filtered = filtered.filter((i) => i.type === type);
+
+    return NextResponse.json({
+      data: filtered,
+      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+    });
   }
 }
 

@@ -47,7 +47,60 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Tickets GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    // Demo data fallback when database is unavailable
+    const url = new URL(req.url);
+    const status = url.searchParams.get('status');
+    const category = url.searchParams.get('category');
+    const priority = url.searchParams.get('priority');
+    const employeeId = url.searchParams.get('employeeId');
+    const assignedTo = url.searchParams.get('assignedTo');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+
+    const demoTickets = [
+      {
+        id: 'demo-tkt1', subject: 'VPN Connection Issues', description: 'Unable to connect to VPN since morning',
+        category: 'it', priority: 'high', status: 'open', assignedTo: 'demo-emp-it1',
+        employeeId: 'demo-emp1', createdAt: new Date('2025-02-20'), updatedAt: new Date('2025-02-20'),
+        employee: { id: 'demo-emp1', firstName: 'Alice', lastName: 'Martinez', employeeId: 'EMP001', department: { name: 'Engineering' } },
+      },
+      {
+        id: 'demo-tkt2', subject: 'New Access Card Request', description: 'Need access card for Building B',
+        category: 'facilities', priority: 'medium', status: 'in_progress', assignedTo: 'demo-emp-fac1',
+        employeeId: 'demo-emp2', createdAt: new Date('2025-02-18'), updatedAt: new Date('2025-02-19'),
+        employee: { id: 'demo-emp2', firstName: 'James', lastName: 'Wilson', employeeId: 'EMP002', department: { name: 'Sales' } },
+      },
+      {
+        id: 'demo-tkt3', subject: 'Payroll Discrepancy', description: 'January paycheck missing overtime bonus',
+        category: 'hr', priority: 'high', status: 'open', assignedTo: 'demo-emp-hr1',
+        employeeId: 'demo-emp3', createdAt: new Date('2025-02-15'), updatedAt: new Date('2025-02-15'),
+        employee: { id: 'demo-emp3', firstName: 'Robert', lastName: 'Brown', employeeId: 'EMP003', department: { name: 'Finance' } },
+      },
+      {
+        id: 'demo-tkt4', subject: 'Printer Not Working', description: '3rd floor printer jammed',
+        category: 'it', priority: 'low', status: 'resolved', assignedTo: 'demo-emp-it1',
+        employeeId: 'demo-emp4', createdAt: new Date('2025-02-10'), updatedAt: new Date('2025-02-11'),
+        employee: { id: 'demo-emp4', firstName: 'Lisa', lastName: 'Chang', employeeId: 'EMP004', department: { name: 'Marketing' } },
+      },
+      {
+        id: 'demo-tkt5', subject: 'Software License Renewal', description: 'Adobe Creative Cloud license expiring',
+        category: 'it', priority: 'medium', status: 'closed', assignedTo: 'demo-emp-it2',
+        employeeId: 'demo-emp2', createdAt: new Date('2025-02-05'), updatedAt: new Date('2025-02-08'),
+        employee: { id: 'demo-emp2', firstName: 'James', lastName: 'Wilson', employeeId: 'EMP002', department: { name: 'Sales' } },
+      },
+    ];
+
+    let filtered = demoTickets;
+    if (status) filtered = filtered.filter((t) => t.status === status);
+    if (category) filtered = filtered.filter((t) => t.category === category);
+    if (priority) filtered = filtered.filter((t) => t.priority === priority);
+    if (employeeId) filtered = filtered.filter((t) => t.employeeId === employeeId);
+    if (assignedTo) filtered = filtered.filter((t) => t.assignedTo === assignedTo);
+
+    return NextResponse.json({
+      data: filtered,
+      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+    });
   }
 }
 

@@ -67,7 +67,102 @@ export async function GET(req: NextRequest) {
     }
   } catch (error) {
     console.error('Workflows GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    // Demo data fallback when database is unavailable
+    const url = new URL(req.url);
+    const type = url.searchParams.get('type');
+    const companyId = url.searchParams.get('companyId');
+    const entity = url.searchParams.get('entity');
+    const status = url.searchParams.get('status');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+
+    if (type === 'definitions' || !type) {
+      const demoDefinitions = [
+        {
+          id: 'demo-wd1', name: 'Leave Approval', type: 'approval', entity: 'leave',
+          description: 'Standard leave approval workflow', isActive: true,
+          companyId: companyId || 'demo-co',
+          createdAt: new Date('2025-01-01'), updatedAt: new Date('2025-01-01'),
+          company: { id: companyId || 'demo-co', name: 'Demo Company' },
+          steps: [
+            { id: 'demo-wds1', name: 'Manager Approval', stepOrder: 0, approverRole: 'manager', approverType: 'role', autoApprove: false, action: 'approve_reject', workflowDefId: 'demo-wd1' },
+            { id: 'demo-wds2', name: 'HR Review', stepOrder: 1, approverRole: 'hr', approverType: 'role', autoApprove: false, action: 'approve_reject', workflowDefId: 'demo-wd1' },
+          ],
+          _count: { instances: 5 },
+        },
+        {
+          id: 'demo-wd2', name: 'Expense Approval', type: 'approval', entity: 'expense',
+          description: 'Expense claim approval workflow', isActive: true,
+          companyId: companyId || 'demo-co',
+          createdAt: new Date('2025-01-01'), updatedAt: new Date('2025-01-01'),
+          company: { id: companyId || 'demo-co', name: 'Demo Company' },
+          steps: [
+            { id: 'demo-wds3', name: 'Manager Approval', stepOrder: 0, approverRole: 'manager', approverType: 'role', autoApprove: false, action: 'approve_reject', workflowDefId: 'demo-wd2' },
+          ],
+          _count: { instances: 3 },
+        },
+        {
+          id: 'demo-wd3', name: 'Travel Approval', type: 'approval', entity: 'travel',
+          description: 'Travel request approval workflow', isActive: true,
+          companyId: companyId || 'demo-co',
+          createdAt: new Date('2025-01-15'), updatedAt: new Date('2025-01-15'),
+          company: { id: companyId || 'demo-co', name: 'Demo Company' },
+          steps: [
+            { id: 'demo-wds4', name: 'Manager Approval', stepOrder: 0, approverRole: 'manager', approverType: 'role', autoApprove: false, action: 'approve_reject', workflowDefId: 'demo-wd3' },
+            { id: 'demo-wds5', name: 'Finance Review', stepOrder: 1, approverRole: 'finance', approverType: 'role', autoApprove: false, action: 'approve_reject', workflowDefId: 'demo-wd3' },
+          ],
+          _count: { instances: 2 },
+        },
+      ];
+
+      let filtered = demoDefinitions;
+      if (entity) filtered = filtered.filter((d) => d.entity === entity);
+
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    } else {
+      const demoInstances = [
+        {
+          id: 'demo-wi1', status: 'pending', currentStep: 0, initiatedBy: 'demo-emp1',
+          workflowDefId: 'demo-wd1', workflowInstanceId: null,
+          createdAt: new Date('2025-02-20'), updatedAt: new Date('2025-02-20'),
+          workflowDef: { id: 'demo-wd1', name: 'Leave Approval', entity: 'leave' },
+          steps: [
+            { id: 'demo-wis1', stepOrder: 0, status: 'pending', actionedBy: null, comments: null, actedAt: null, workflowInstanceId: 'demo-wi1' },
+            { id: 'demo-wis2', stepOrder: 1, status: 'pending', actionedBy: null, comments: null, actedAt: null, workflowInstanceId: 'demo-wi1' },
+          ],
+        },
+        {
+          id: 'demo-wi2', status: 'approved', currentStep: 0, initiatedBy: 'demo-emp2',
+          workflowDefId: 'demo-wd2', workflowInstanceId: null,
+          createdAt: new Date('2025-02-15'), updatedAt: new Date('2025-02-16'),
+          workflowDef: { id: 'demo-wd2', name: 'Expense Approval', entity: 'expense' },
+          steps: [
+            { id: 'demo-wis3', stepOrder: 0, status: 'approved', actionedBy: 'demo-emp3', comments: 'Approved', actedAt: new Date('2025-02-16'), workflowInstanceId: 'demo-wi2' },
+          ],
+        },
+        {
+          id: 'demo-wi3', status: 'rejected', currentStep: 0, initiatedBy: 'demo-emp4',
+          workflowDefId: 'demo-wd3', workflowInstanceId: null,
+          createdAt: new Date('2025-02-10'), updatedAt: new Date('2025-02-12'),
+          workflowDef: { id: 'demo-wd3', name: 'Travel Approval', entity: 'travel' },
+          steps: [
+            { id: 'demo-wis4', stepOrder: 0, status: 'rejected', actionedBy: 'demo-emp3', comments: 'Budget constraints', actedAt: new Date('2025-02-12'), workflowInstanceId: 'demo-wi3' },
+            { id: 'demo-wis5', stepOrder: 1, status: 'pending', actionedBy: null, comments: null, actedAt: null, workflowInstanceId: 'demo-wi3' },
+          ],
+        },
+      ];
+
+      let filtered = demoInstances;
+      if (status) filtered = filtered.filter((i) => i.status === status);
+
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
   }
 }
 

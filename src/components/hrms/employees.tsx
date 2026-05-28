@@ -375,22 +375,22 @@ export function Employees() {
             </div>
             <div className="space-y-1">
               <Label className="text-sm">Department</Label>
-              <Select value={form.departmentId} onValueChange={(v) => setForm(f => ({ ...f, departmentId: v }))}>
+              <Select value={form.departmentId || undefined} onValueChange={(v) => setForm(f => ({ ...f, departmentId: v }))}>
                 <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
                 <SelectContent>
                   {departmentOptions.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
-                  {departmentOptions.length === 0 && <SelectItem value="" disabled>No departments found</SelectItem>}
+                  {departmentOptions.length === 0 && <SelectItem value="_none" disabled>No departments found</SelectItem>}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
               <Label className="text-sm">Branch</Label>
-              <Select value={form.branchId || ''} onValueChange={(v) => setForm(f => ({ ...f, branchId: v }))}>
+              <Select value={form.branchId || '_none'} onValueChange={(v) => setForm(f => ({ ...f, branchId: v === '_none' ? '' : v }))}>
                 <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_none">None</SelectItem>
                   {branchOptions.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
-                  {branchOptions.length === 0 && <SelectItem value="" disabled>No branches found</SelectItem>}
+                  {branchOptions.length === 0 && <SelectItem value="_empty" disabled>No branches found</SelectItem>}
                 </SelectContent>
               </Select>
             </div>
@@ -447,10 +447,11 @@ export function Employees() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-sm">Department</Label>
-                <Select value={editForm.departmentId} onValueChange={(v) => setEditForm(f => ({ ...f, departmentId: v }))}>
+                <Select value={editForm.departmentId || undefined} onValueChange={(v) => setEditForm(f => ({ ...f, departmentId: v }))}>
                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent>
                     {departmentOptions.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                    {departmentOptions.length === 0 && <SelectItem value="_none" disabled>No departments found</SelectItem>}
                   </SelectContent>
                 </Select>
               </div>
