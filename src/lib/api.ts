@@ -322,7 +322,7 @@ export async function clearNotifications(userId: string) {
 }
 
 // ==================== WORKFLOWS ====================
-export async function getWorkflows(params?: { companyId?: string; entity?: string; page?: number }) {
+export async function getWorkflows(params?: { companyId?: string; entity?: string; type?: string; page?: number }) {
   const query = new URLSearchParams();
   if (params) Object.entries(params).forEach(([k, v]) => { if (v) query.set(k, v); });
   return apiFetch('/workflows?' + query.toString());

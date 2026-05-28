@@ -44,7 +44,7 @@ interface TicketData {
 }
 
 export function Helpdesk() {
-  const { user } = useAppStore();
+  const { user, currentCompany } = useAppStore();
   const [tickets, setTickets] = useState<TicketData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -58,7 +58,7 @@ export function Helpdesk() {
   const fetchTickets = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await getTickets({});
+      const res = await getTickets({ companyId: currentCompany?.id });
       setTickets((res as { data: TicketData[] }).data || []);
     } catch {
       toast.error('Failed to load tickets');
@@ -76,11 +76,16 @@ export function Helpdesk() {
   });
 
   const handleCreateTicket = async () => {
+    const employeeId = user?.employeeId;
+    if (!employeeId) {
+      toast.error('Employee ID not found. Please log in again.');
+      return;
+    }
     try {
       setSubmitting(true);
       await createTicket({
         ...form,
-        employeeId: user?.employeeId || user?.id || 'demo',
+        employeeId,
         status: 'open',
       });
       toast.success('Ticket created successfully');

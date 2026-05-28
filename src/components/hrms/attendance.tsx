@@ -56,6 +56,7 @@ export function Attendance() {
       setLoading(true);
       const params: Record<string, string> = {};
       if (dateFilter) params.date = dateFilter;
+      if (currentCompany?.id) params.companyId = currentCompany.id;
       const res = await getAttendance(params);
       const data = (res as { data: AttendanceRecord[] }).data || [];
       setRecords(data);
@@ -81,9 +82,14 @@ export function Attendance() {
   ];
 
   const handleCheckIn = async () => {
+    const employeeId = user?.employeeId;
+    if (!employeeId) {
+      toast.error('Employee ID not found. Please log in again.');
+      return;
+    }
     try {
       setCheckingIn(true);
-      await checkIn(user?.employeeId || user?.id || 'emp_default');
+      await checkIn(employeeId);
       toast.success('Checked in successfully');
       fetchAttendance();
     } catch {

@@ -51,7 +51,7 @@ export function ClientPortal() {
       const [clientsRes, jobsRes, candidatesRes] = await Promise.all([
         getClients(params),
         getJobs(params),
-        getCandidates({}),
+        getCandidates({ companyId: currentCompany?.id }),
       ]);
       setClients((clientsRes as { data: ClientData[] }).data || []);
       setJobs((jobsRes as { data: JobData[] }).data || []);

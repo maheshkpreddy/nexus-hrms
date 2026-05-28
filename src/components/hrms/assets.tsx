@@ -56,7 +56,7 @@ export function Assets() {
   const fetchAssets = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await getAssets({});
+      const res = await getAssets({ companyId: currentCompany?.id });
       setAssets((res as { data: AssetData[] }).data || []);
     } catch {
       toast.error('Failed to load assets');
@@ -120,10 +120,15 @@ export function Assets() {
   };
 
   const handleAllocateAsset = async (id: string) => {
+    const employeeId = user?.employeeId;
+    if (!employeeId) {
+      toast.error('Employee ID not found. Please log in again.');
+      return;
+    }
     try {
       await updateAsset(id, {
         status: 'allocated',
-        assignedTo: user?.employeeId || user?.id || 'demo',
+        assignedTo: employeeId,
         allocatedDate: new Date().toISOString().split('T')[0],
       });
       toast.success('Asset allocated');

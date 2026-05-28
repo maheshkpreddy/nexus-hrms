@@ -18,12 +18,12 @@ function getDemoAnalyticsData() {
       hired: 32,
     },
     departmentDistribution: [
-      { departmentId: 'd1', departmentName: 'Engineering', count: 85 },
-      { departmentId: 'd2', departmentName: 'Marketing', count: 42 },
-      { departmentId: 'd3', departmentName: 'Sales', count: 56 },
-      { departmentId: 'd4', departmentName: 'HR', count: 18 },
-      { departmentId: 'd5', departmentName: 'Finance', count: 24 },
-      { departmentId: 'd6', departmentName: 'Operations', count: 20 },
+      { departmentId: 'dept-1', departmentName: 'Engineering', count: 85 },
+      { departmentId: 'dept-2', departmentName: 'Marketing', count: 42 },
+      { departmentId: 'dept-3', departmentName: 'Sales', count: 56 },
+      { departmentId: 'dept-4', departmentName: 'HR', count: 18 },
+      { departmentId: 'dept-5', departmentName: 'Finance', count: 24 },
+      { departmentId: 'dept-6', departmentName: 'Operations', count: 20 },
     ],
     attendanceOverview: {
       byStatus: [

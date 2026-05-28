@@ -27,14 +27,24 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(branches);
+    const total = await db.branch.count({ where });
+
+    return NextResponse.json({
+      data: branches,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
   } catch (error) {
     console.error('Branches GET error:', error);
     // Demo data fallback when database is unavailable
-    return NextResponse.json([
+    const demoBranches = [
       { id: 'branch-1', name: 'Hyderabad HQ', code: 'HYD', city: 'Hyderabad', country: 'India', isActive: true, companyId: companyId || 'comp-1' },
       { id: 'branch-2', name: 'Bangalore Office', code: 'BLR', city: 'Bangalore', country: 'India', isActive: true, companyId: companyId || 'comp-1' },
       { id: 'branch-3', name: 'Mumbai Office', code: 'MUM', city: 'Mumbai', country: 'India', isActive: true, companyId: companyId || 'comp-1' },
-    ]);
+    ];
+
+    return NextResponse.json({
+      data: demoBranches,
+      pagination: { page: 1, limit: 100, total: demoBranches.length, totalPages: 1 },
+    });
   }
 }

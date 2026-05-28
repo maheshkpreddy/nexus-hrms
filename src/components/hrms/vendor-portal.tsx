@@ -50,7 +50,7 @@ export function VendorPortal() {
       const [vendorsRes, jobsRes, candidatesRes] = await Promise.all([
         getVendors(params),
         getJobs(params),
-        getCandidates({}),
+        getCandidates({ companyId: currentCompany?.id }),
       ]);
       setVendors((vendorsRes as { data: VendorData[] }).data || []);
       setJobs((jobsRes as { data: JobData[] }).data || []);

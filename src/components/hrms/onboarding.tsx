@@ -52,7 +52,7 @@ interface OnboardingTask {
 }
 
 export function Onboarding() {
-  const { user } = useAppStore();
+  const { user, currentCompany } = useAppStore();
   const [tasks, setTasks] = useState<OnboardingTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
@@ -65,7 +65,7 @@ export function Onboarding() {
   const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await getOnboardingTasks({});
+      const res = await getOnboardingTasks({ companyId: currentCompany?.id });
       const taskData = (res as { data: OnboardingTask[] }).data || [];
       setTasks(taskData);
       if (taskData.length > 0 && !selectedEmployeeId) {

@@ -53,6 +53,7 @@ export function Payroll() {
     try {
       setLoading(true);
       const res = await getPayroll({
+        companyId: currentCompany?.id,
         month: parseInt(selectedMonth),
         year: parseInt(selectedYear),
       });

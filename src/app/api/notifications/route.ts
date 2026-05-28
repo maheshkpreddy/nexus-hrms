@@ -13,10 +13,7 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     if (!userId) {
-      return NextResponse.json(
-        { error: 'userId query parameter is required' },
-        { status: 400 }
-      );
+      throw new Error('userId query parameter is required');
     }
 
     const where: Record<string, unknown> = { userId };

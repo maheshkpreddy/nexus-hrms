@@ -60,7 +60,7 @@ interface ExpenseData {
 }
 
 export function TravelExpense() {
-  const { user } = useAppStore();
+  const { user, currentCompany } = useAppStore();
   const [travelRequests, setTravelRequests] = useState<TravelData[]>([]);
   const [expenseClaims, setExpenseClaims] = useState<ExpenseData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,8 +78,8 @@ export function TravelExpense() {
     try {
       setLoading(true);
       const [travelRes, expenseRes] = await Promise.all([
-        getTravelRequests({}),
-        getExpenses({}),
+        getTravelRequests({ companyId: currentCompany?.id }),
+        getExpenses({ companyId: currentCompany?.id }),
       ]);
       setTravelRequests((travelRes as { data: TravelData[] }).data || []);
       setExpenseClaims((expenseRes as { data: ExpenseData[] }).data || []);
@@ -98,12 +98,17 @@ export function TravelExpense() {
   };
 
   const handleCreateTravel = async () => {
+    const employeeId = user?.employeeId;
+    if (!employeeId) {
+      toast.error('Employee ID not found. Please log in again.');
+      return;
+    }
     try {
       setSubmitting(true);
       await createTravelRequest({
         ...travelForm,
         estimatedCost: parseFloat(travelForm.estimatedCost) || 0,
-        employeeId: user?.employeeId || user?.id || 'demo',
+        employeeId,
         status: 'pending',
         policyCompliant: true,
       });
@@ -119,12 +124,17 @@ export function TravelExpense() {
   };
 
   const handleCreateExpense = async () => {
+    const employeeId = user?.employeeId;
+    if (!employeeId) {
+      toast.error('Employee ID not found. Please log in again.');
+      return;
+    }
     try {
       setSubmitting(true);
       await createExpense({
         ...expenseForm,
         amount: parseFloat(expenseForm.amount) || 0,
-        employeeId: user?.employeeId || user?.id || 'demo',
+        employeeId,
         status: 'pending',
       });
       toast.success('Expense claim submitted');

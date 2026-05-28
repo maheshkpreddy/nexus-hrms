@@ -55,11 +55,9 @@ interface AppState {
 }
 
 const DEMO_COMPANIES: CompanyInfo[] = [
-  { id: 'c1', name: 'TechCorp Global', code: 'TCG', industry: 'IT Services', country: 'US', currency: 'USD', employeeCount: 2450, isActive: true },
-  { id: 'c2', name: 'ManufactPro Industries', code: 'MPI', industry: 'Manufacturing', country: 'IN', currency: 'INR', employeeCount: 5800, isActive: true },
-  { id: 'c3', name: 'HealthFirst Solutions', code: 'HFS', industry: 'Healthcare', country: 'GB', currency: 'GBP', employeeCount: 1200, isActive: true },
-  { id: 'c4', name: 'RetailMax Group', code: 'RMG', industry: 'Retail', country: 'DE', currency: 'EUR', employeeCount: 8900, isActive: true },
-  { id: 'c5', name: 'LogiTrans Worldwide', code: 'LTW', industry: 'Logistics', country: 'SG', currency: 'SGD', employeeCount: 3200, isActive: true },
+  { id: 'comp-1', name: 'Nexus Technologies', code: 'NEXUS', industry: 'IT Services', country: 'IN', currency: 'INR', employeeCount: 10, isActive: true },
+  { id: 'comp-2', name: 'ManufactPro Industries', code: 'MPI', industry: 'Manufacturing', country: 'IN', currency: 'INR', employeeCount: 5800, isActive: true },
+  { id: 'comp-3', name: 'HealthFirst Solutions', code: 'HFS', industry: 'Healthcare', country: 'GB', currency: 'GBP', employeeCount: 1200, isActive: true },
 ];
 
 export const useAppStore = create<AppState>((set, get) => ({

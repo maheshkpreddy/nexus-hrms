@@ -84,7 +84,7 @@ export function Recruitment() {
       if (currentCompany?.id) params.companyId = currentCompany.id;
       const [jobsRes, candidatesRes] = await Promise.all([
         getJobs(params),
-        getCandidates({}),
+        getCandidates({ companyId: currentCompany?.id }),
       ]);
       setJobs((jobsRes as { data: JobData[] }).data || []);
       setCandidates((candidatesRes as { data: CandidateData[] }).data || []);

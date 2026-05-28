@@ -55,7 +55,7 @@ export function Performance() {
   const fetchGoals = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await getGoals({});
+      const res = await getGoals({ companyId: currentCompany?.id });
       setGoals((res as { data: GoalData[] }).data || []);
     } catch {
       toast.error('Failed to load goals');
@@ -67,13 +67,18 @@ export function Performance() {
   useEffect(() => { fetchGoals(); }, [fetchGoals]);
 
   const handleCreateGoal = async () => {
+    const employeeId = user?.employeeId;
+    if (!employeeId) {
+      toast.error('Employee ID not found. Please log in again.');
+      return;
+    }
     try {
       setSubmitting(true);
       await createGoal({
         ...form,
         progress: 0,
         status: 'active',
-        employeeId: user?.employeeId || user?.id || 'emp_default',
+        employeeId,
         companyId: currentCompany?.id,
         startDate: new Date().toISOString(),
         endDate: new Date(Date.now() + 90 * 24 * 3600000).toISOString(),

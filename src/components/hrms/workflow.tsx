@@ -70,20 +70,11 @@ export function Workflow() {
     try {
       const companyId = currentCompany?.id || '';
       const [defRes, instRes] = await Promise.all([
-        getWorkflows({ companyId, entity: undefined }),
-        getWorkflows({ companyId, entity: undefined }),
+        getWorkflows({ companyId, type: 'definitions' }),
+        getWorkflows({ companyId, type: 'instances' }),
       ]);
-      // The API returns definitions or instances based on `type` param, but our getWorkflows
-      // doesn't have a type param. Let's use raw fetch approach for the dual-type endpoint.
-      const defData = defRes as { data?: WorkflowDef[] };
-      const instData = instRes as { data?: WorkflowInst[] };
-      // Since the endpoint returns based on type param, we need to use direct calls
-      const [defResRaw, instResRaw] = await Promise.all([
-        fetch(`/api/workflows?type=definitions&companyId=${companyId}`),
-        fetch(`/api/workflows?type=instances&companyId=${companyId}`),
-      ]);
-      const defJson = await defResRaw.json();
-      const instJson = await instResRaw.json();
+      const defJson = defRes as { data?: WorkflowDef[] };
+      const instJson = instRes as { data?: WorkflowInst[] };
       setDefinitions(defJson.data || []);
       setInstances(instJson.data || []);
     } catch (err) {

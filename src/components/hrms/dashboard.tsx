@@ -100,12 +100,12 @@ export function Dashboard() {
     );
   }
 
-  const stats = data?.stats;
-  const totalEmployees = stats?.totalEmployees ?? 0;
-  const newHires = stats?.newHires ?? 0;
-  const openPositions = stats?.openPositions ?? 0;
-  const attendanceRate = stats?.attendanceRate ?? 0;
-  const pendingApprovals = stats?.pendingApprovals ?? 0;
+  const stats = data?.stats || data;
+  const totalEmployees = (stats as Record<string, unknown>)?.totalEmployees ?? (data as Record<string, unknown>)?.totalEmployees ?? 0;
+  const newHires = (stats as Record<string, unknown>)?.newHires ?? (data as Record<string, unknown>)?.newHires ?? 0;
+  const openPositions = (stats as Record<string, unknown>)?.openPositions ?? (data as Record<string, unknown>)?.openPositions ?? 0;
+  const attendanceRate = (stats as Record<string, unknown>)?.attendanceRate ?? (data as Record<string, unknown>)?.attendanceRate ?? 0;
+  const pendingApprovals = (stats as Record<string, unknown>)?.pendingApprovals ?? (data as Record<string, unknown>)?.pendingApprovals ?? 0;
   const attritionRate = (analyticsData as Record<string, Record<string, unknown>> | null)?.attrition
     ? Number(((analyticsData as Record<string, Record<string, unknown>>)?.attrition as Record<string, unknown>)?.rate ?? 0)
     : 0;
@@ -120,11 +120,16 @@ export function Dashboard() {
   ];
 
   // Convert departmentStats to chart format with colors
-  const deptData = (data?.departmentStats || []).map((d, i) => ({
-    name: d.departmentName || 'Unknown',
-    value: d.count || 0,
+  const rawDeptData = (data as Record<string, unknown>)?.departmentDistribution || data?.departmentStats || [];
+  const deptData = (Array.isArray(rawDeptData) ? rawDeptData : []).map((d: Record<string, unknown>, i: number) => ({
+    name: (d.departmentName as string) || (d.name as string) || 'Unknown',
+    value: (d.count as number) || (d.value as number) || 0,
     color: DEPT_COLORS[i % DEPT_COLORS.length],
   }));
+
+  // Recent activities  
+  const rawActivities = (data as Record<string, unknown>)?.recentActivities || data?.recentActivities || [];
+  const recentActivities = Array.isArray(rawActivities) ? rawActivities : [];
 
   // Analytics charts
   const headcountTrends = (analyticsData as Record<string, unknown> | null)?.headcountTrends as { month: string; count: number }[] | undefined;

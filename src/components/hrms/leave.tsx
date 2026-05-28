@@ -54,7 +54,7 @@ interface LeaveData {
 }
 
 export function Leave() {
-  const { user } = useAppStore();
+  const { user, currentCompany } = useAppStore();
   const [leaves, setLeaves] = useState<LeaveData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showApplyDialog, setShowApplyDialog] = useState(false);
@@ -66,7 +66,7 @@ export function Leave() {
   const fetchLeaves = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await getLeaves({});
+      const res = await getLeaves({ companyId: currentCompany?.id });
       setLeaves((res as { data: LeaveData[] }).data || []);
     } catch {
       toast.error('Failed to load leave data');
@@ -83,6 +83,11 @@ export function Leave() {
   };
 
   const handleApplyLeave = async () => {
+    const employeeId = user?.employeeId;
+    if (!employeeId) {
+      toast.error('Employee ID not found. Please log in again.');
+      return;
+    }
     try {
       setSubmitting(true);
       const start = new Date(form.startDate);
@@ -91,7 +96,7 @@ export function Leave() {
       await applyLeave({
         ...form,
         totalDays,
-        employeeId: user?.employeeId || user?.id || 'emp_default',
+        employeeId,
         createWorkflow: true,
         status: 'pending',
       });

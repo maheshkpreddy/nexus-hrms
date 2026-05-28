@@ -49,7 +49,7 @@ export function Settings() {
     mutationFn: (data: Record<string, unknown>) => {
       const employeeId = user?.employeeId;
       if (!employeeId) {
-        throw new Error('No employee ID found. Please log in again.');
+        throw new Error('Employee ID not found. Please log in again.');
       }
       return updateEmployee(employeeId, data);
     },
@@ -63,6 +63,11 @@ export function Settings() {
   });
 
   const handleSaveProfile = () => {
+    const employeeId = user?.employeeId;
+    if (!employeeId) {
+      toast({ title: 'Error', description: 'Employee ID not found. Please log in again.', variant: 'destructive' });
+      return;
+    }
     updateProfileMutation.mutate({
       firstName: profileForm.firstName,
       lastName: profileForm.lastName,

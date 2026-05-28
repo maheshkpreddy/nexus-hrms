@@ -11,16 +11,16 @@ import { Shield, Users, UserCheck, Building2, Truck, Hexagon, ArrowRight, Sparkl
 
 const DEMO_LOGINS: { role: UserRole; name: string; email: string; password: string; icon: React.ReactNode; color: string }[] = [
   { role: 'super_admin', name: 'Admin Nexus', email: 'admin@nexushrms.com', password: 'admin123', icon: <Shield className="h-4 w-4" />, color: 'bg-red-500 hover:bg-red-600' },
-  { role: 'company_hr_admin', name: 'Sarah Johnson', email: 'sarah.j@techcorp.com', password: 'sarah123', icon: <Users className="h-4 w-4" />, color: 'bg-purple-500 hover:bg-purple-600' },
-  { role: 'employee', name: 'Raj Patel', email: 'raj.p@techcorp.com', password: 'raj123', icon: <UserCheck className="h-4 w-4" />, color: 'bg-emerald-500 hover:bg-emerald-600' },
+  { role: 'company_hr_admin', name: 'Priya Sharma', email: 'sarah.j@nexustech.com', password: 'sarah123', icon: <Users className="h-4 w-4" />, color: 'bg-purple-500 hover:bg-purple-600' },
+  { role: 'employee', name: 'Amit Patel', email: 'emily.c@nexustech.com', password: 'emily123', icon: <UserCheck className="h-4 w-4" />, color: 'bg-emerald-500 hover:bg-emerald-600' },
   { role: 'client', name: 'Acme Corp', email: 'hr@acme.com', password: 'acme123', icon: <Building2 className="h-4 w-4" />, color: 'bg-amber-500 hover:bg-amber-600' },
   { role: 'vendor', name: 'TalentHunt', email: 'info@talenthunt.com', password: 'thunt123', icon: <Truck className="h-4 w-4" />, color: 'bg-teal-500 hover:bg-teal-600' },
 ];
 
 export function LoginScreen() {
   const { login, isLoading, authError } = useAppStore();
-  const [email, setEmail] = useState('raj.p@techcorp.com');
-  const [password, setPassword] = useState('raj123');
+  const [email, setEmail] = useState('admin@nexushrms.com');
+  const [password, setPassword] = useState('admin123');
   const [mounted, setMounted] = useState(true);
 
   const handleLogin = async () => {

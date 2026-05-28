@@ -77,6 +77,7 @@ export async function GET(req: NextRequest) {
     if (status) filtered = filtered.filter(e => e.status === status);
     if (departmentId) filtered = filtered.filter(e => e.department.id === departmentId);
     if (companyId) filtered = filtered.filter(e => e.company.id === companyId);
+    if (branchId) filtered = filtered.filter(e => e.branch?.id === branchId);
     return NextResponse.json({
       data: filtered,
       pagination: { page, limit, total: filtered.length, totalPages: 1 },

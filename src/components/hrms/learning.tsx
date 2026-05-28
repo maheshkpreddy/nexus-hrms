@@ -64,7 +64,7 @@ export function Learning() {
   const fetchLearning = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await getLearningRecords({});
+      const res = await getLearningRecords({ companyId: currentCompany?.id });
       setCourses((res as { data: LearningData[] }).data || []);
     } catch {
       toast.error('Failed to load learning data');
@@ -76,10 +76,15 @@ export function Learning() {
   useEffect(() => { fetchLearning(); }, [fetchLearning]);
 
   const handleEnroll = async (courseName: string) => {
+    const employeeId = user?.employeeId;
+    if (!employeeId) {
+      toast.error('Employee ID not found. Please log in again.');
+      return;
+    }
     try {
       await createLearningRecord({
         courseName,
-        employeeId: user?.employeeId || user?.id || 'demo',
+        employeeId,
         status: 'in_progress',
         progress: 0,
         category: form.category,
@@ -93,11 +98,16 @@ export function Learning() {
   };
 
   const handleCreateCourse = async () => {
+    const employeeId = user?.employeeId;
+    if (!employeeId) {
+      toast.error('Employee ID not found. Please log in again.');
+      return;
+    }
     try {
       setSubmitting(true);
       await createLearningRecord({
         ...form,
-        employeeId: user?.employeeId || user?.id || 'demo',
+        employeeId,
         status: 'available',
         progress: 0,
         companyId: currentCompany?.id,

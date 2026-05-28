@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Demo users for fallback when database is unavailable
-const DEMO_USERS: Record<string, { name: string; role: string; password: string; companyId: string | null; companyName: string | null; companyCode: string | null; companyCurrency: string | null }> = {
-  'admin@nexushrms.com': { name: 'Admin Nexus', role: 'super_admin', password: 'admin123', companyId: null, companyName: null, companyCode: null, companyCurrency: null },
-  'sarah.j@techcorp.com': { name: 'Sarah Johnson', role: 'company_hr_admin', password: 'sarah123', companyId: 'demo-tcg', companyName: 'TechCorp Global', companyCode: 'TCG', companyCurrency: 'USD' },
-  'raj.p@techcorp.com': { name: 'Raj Patel', role: 'reporting_manager', password: 'raj123', companyId: 'demo-tcg', companyName: 'TechCorp Global', companyCode: 'TCG', companyCurrency: 'USD' },
-  'emily.c@techcorp.com': { name: 'Emily Chen', role: 'employee', password: 'emily123', companyId: 'demo-tcg', companyName: 'TechCorp Global', companyCode: 'TCG', companyCurrency: 'USD' },
-  'hr@acme.com': { name: 'Acme Corp', role: 'client', password: 'acme123', companyId: 'demo-tcg', companyName: 'TechCorp Global', companyCode: 'TCG', companyCurrency: 'USD' },
-  'info@talenthunt.com': { name: 'TalentHunt Agency', role: 'vendor', password: 'thunt123', companyId: 'demo-tcg', companyName: 'TechCorp Global', companyCode: 'TCG', companyCurrency: 'USD' },
+const DEMO_USERS: Record<string, { name: string; role: string; password: string; companyId: string | null; companyName: string | null; companyCode: string | null; companyCurrency: string | null; employeeId: string | null; employeeName: string | null }> = {
+  'admin@nexushrms.com': { name: 'Admin Nexus', role: 'super_admin', password: 'admin123', companyId: 'comp-1', companyName: 'Nexus Technologies', companyCode: 'NEXUS', companyCurrency: 'INR', employeeId: null, employeeName: null },
+  'sarah.j@nexustech.com': { name: 'Sarah Johnson', role: 'company_hr_admin', password: 'sarah123', companyId: 'comp-1', companyName: 'Nexus Technologies', companyCode: 'NEXUS', companyCurrency: 'INR', employeeId: 'EMP002', employeeName: 'Priya Sharma' },
+  'raj.p@nexustech.com': { name: 'Raj Patel', role: 'reporting_manager', password: 'raj123', companyId: 'comp-1', companyName: 'Nexus Technologies', companyCode: 'NEXUS', companyCurrency: 'INR', employeeId: 'EMP001', employeeName: 'Rajesh Kumar' },
+  'emily.c@nexustech.com': { name: 'Emily Chen', role: 'employee', password: 'emily123', companyId: 'comp-1', companyName: 'Nexus Technologies', companyCode: 'NEXUS', companyCurrency: 'INR', employeeId: 'EMP003', employeeName: 'Amit Patel' },
+  'hr@acme.com': { name: 'Acme Corp', role: 'client', password: 'acme123', companyId: 'comp-1', companyName: 'Nexus Technologies', companyCode: 'NEXUS', companyCurrency: 'INR', employeeId: null, employeeName: null },
+  'info@talenthunt.com': { name: 'TalentHunt Agency', role: 'vendor', password: 'thunt123', companyId: 'comp-1', companyName: 'Nexus Technologies', companyCode: 'NEXUS', companyCurrency: 'INR', employeeId: null, employeeName: null },
 };
 
 export async function POST(req: NextRequest) {
@@ -102,11 +102,16 @@ export async function POST(req: NextRequest) {
             name: demoUser.companyName,
             code: demoUser.companyCode,
             currency: demoUser.companyCurrency,
-            industry: 'Technology',
-            country: 'US',
+            industry: 'IT Services',
+            country: 'IN',
             isActive: true,
           } : null,
-          employee: null,
+          employee: demoUser.employeeId ? {
+            id: `demo-${email.split('@')[0]}`,
+            employeeId: demoUser.employeeId,
+            firstName: demoUser.employeeName?.split(' ')[0] || '',
+            lastName: demoUser.employeeName?.split(' ').slice(1).join(' ') || '',
+          } : null,
         },
         token: Buffer.from(`${userId}:${Date.now()}`).toString('base64'),
       });
