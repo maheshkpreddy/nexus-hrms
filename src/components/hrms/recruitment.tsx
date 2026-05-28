@@ -104,7 +104,7 @@ export function Recruitment() {
     return matchesSearch && matchesStatus && matchesDept;
   });
 
-  const departments = [...new Set(jobs.map(j => j.department).filter(Boolean) as string[])];
+  const departments = [...new Set(jobs.map(j => j.department).filter(Boolean) as string[])].filter(d => d && d.trim());
 
   const handleCreateJob = async () => {
     try {
@@ -261,7 +261,7 @@ export function Recruitment() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Departments</SelectItem>
-                {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                {departments.filter(d => d && d.trim()).map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

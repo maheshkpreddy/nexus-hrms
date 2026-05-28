@@ -204,7 +204,7 @@ export function AIInterview() {
                   <SelectValue placeholder="Select candidate" />
                 </SelectTrigger>
                 <SelectContent>
-                  {candidates.map((c) => (
+                  {candidates.filter((c) => c.id && c.id.trim()).map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.firstName} {c.lastName}
                     </SelectItem>

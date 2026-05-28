@@ -294,7 +294,7 @@ export function JobPortal() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Locations</SelectItem>
-                {uniqueLocations.map((loc) => (
+                {uniqueLocations.filter(loc => loc && loc.trim()).map((loc) => (
                   <SelectItem key={loc} value={loc.toLowerCase()}>{loc}</SelectItem>
                 ))}
               </SelectContent>

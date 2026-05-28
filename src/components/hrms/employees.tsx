@@ -81,7 +81,7 @@ export function Employees() {
     }
   }, [currentCompany?.id]);
 
-  const departments = [...new Set(employees.map(e => e.department?.name).filter(Boolean))];
+  const departments = [...new Set(employees.map(e => e.department?.name).filter(Boolean))].filter(d => d && d.trim() !== '');
 
   const filteredEmployees = employees.filter(emp => {
     const matchesSearch = `${emp.firstName} ${emp.lastName} ${emp.email}`.toLowerCase().includes(searchQuery.toLowerCase());
@@ -210,7 +210,7 @@ export function Employees() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Departments</SelectItem>
-            {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+            {departments.filter(d => d && d.trim()).map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -378,7 +378,7 @@ export function Employees() {
               <Select value={form.departmentId || undefined} onValueChange={(v) => setForm(f => ({ ...f, departmentId: v }))}>
                 <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
                 <SelectContent>
-                  {departmentOptions.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                  {departmentOptions.filter(d => d.id && d.id.trim()).map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
                   {departmentOptions.length === 0 && <SelectItem value="_none" disabled>No departments found</SelectItem>}
                 </SelectContent>
               </Select>
@@ -389,7 +389,7 @@ export function Employees() {
                 <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_none">None</SelectItem>
-                  {branchOptions.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                  {branchOptions.filter(b => b.id && b.id.trim()).map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
                   {branchOptions.length === 0 && <SelectItem value="_empty" disabled>No branches found</SelectItem>}
                 </SelectContent>
               </Select>
@@ -450,7 +450,7 @@ export function Employees() {
                 <Select value={editForm.departmentId || undefined} onValueChange={(v) => setEditForm(f => ({ ...f, departmentId: v }))}>
                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent>
-                    {departmentOptions.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                    {departmentOptions.filter(d => d.id && d.id.trim()).map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
                     {departmentOptions.length === 0 && <SelectItem value="_none" disabled>No departments found</SelectItem>}
                   </SelectContent>
                 </Select>
@@ -461,7 +461,7 @@ export function Employees() {
                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="_none">None</SelectItem>
-                    {branchOptions.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                    {branchOptions.filter(b => b.id && b.id.trim()).map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

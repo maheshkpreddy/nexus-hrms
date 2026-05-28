@@ -91,7 +91,7 @@ export function Header() {
             </div>
           </SelectTrigger>
           <SelectContent>
-            {companies.map((c: CompanyInfo) => (
+            {companies.filter((c: CompanyInfo) => c.id && c.id.trim()).map((c: CompanyInfo) => (
               <SelectItem key={c.id} value={c.id}>
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{c.name}</span>
