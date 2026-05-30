@@ -145,7 +145,7 @@ export function LoginScreen() {
 
         {/* Footer */}
         <p className="text-center text-emerald-200/40 text-xs mt-6">
-          &copy; 2025 NEXUS HRMS. AI-Powered Enterprise HR Platform.
+          &copy; 2026 NEXUS HRMS. AI-Powered Enterprise HR Platform.
         </p>
       </div>
     </div>
