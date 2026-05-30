@@ -115,6 +115,11 @@ export async function GET(req: NextRequest) {
       where: { ...companyFilter, status: 'active' },
     });
 
+    // If DB has no employees, use demo data fallback
+    if (totalActiveEmployees === 0) {
+      return NextResponse.json(getDemoAnalyticsData());
+    }
+
     const exitedInPeriod = await db.employee.count({
       where: {
         ...companyFilter,

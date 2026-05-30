@@ -45,6 +45,23 @@ export async function GET(req: NextRequest) {
       db.employee.count({ where }),
     ]);
 
+    // If DB returns empty, use demo data fallback
+    if (employees.length === 0 && total === 0) {
+      let filtered = [...DEMO_EMPLOYEES];
+      if (search) {
+        const q = search.toLowerCase();
+        filtered = filtered.filter(e => e.firstName.toLowerCase().includes(q) || e.lastName.toLowerCase().includes(q) || e.email.toLowerCase().includes(q) || e.designation.toLowerCase().includes(q));
+      }
+      if (status) filtered = filtered.filter(e => e.status === status);
+      if (departmentId) filtered = filtered.filter(e => e.department.id === departmentId);
+      if (companyId) filtered = filtered.filter(e => e.company.id === companyId);
+      if (branchId) filtered = filtered.filter(e => e.branch?.id === branchId);
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: employees,
       pagination: {

@@ -38,6 +38,18 @@ export async function GET(req: NextRequest) {
       db.onboardingTask.count({ where }),
     ]);
 
+    // If DB returns empty, use demo data fallback
+    if (tasks.length === 0 && total === 0) {
+      let filtered = [...DEMO_ONBOARDING];
+      if (employeeId) filtered = filtered.filter(t => t.employeeId === employeeId);
+      if (status) filtered = filtered.filter(t => t.status === status);
+      if (category) filtered = filtered.filter(t => t.category === category);
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: tasks,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },

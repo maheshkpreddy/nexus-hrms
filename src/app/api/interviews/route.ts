@@ -33,6 +33,19 @@ export async function GET(req: NextRequest) {
       db.interview.count({ where }),
     ]);
 
+    // If DB returns empty, use demo data fallback
+    if (interviews.length === 0 && total === 0) {
+      let filtered = [...DEMO_INTERVIEWS];
+      if (status) filtered = filtered.filter(i => i.status === status);
+      if (candidateId) filtered = filtered.filter(i => i.candidateId === candidateId);
+      if (jobId) filtered = filtered.filter(i => i.jobId === jobId);
+      if (type) filtered = filtered.filter(i => i.type === type);
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: interviews,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },

@@ -37,6 +37,18 @@ export async function GET(req: NextRequest) {
       db.survey.count({ where }),
     ]);
 
+    // If DB returns empty, use demo data fallback
+    if (surveys.length === 0 && total === 0) {
+      let filtered = [...DEMO_SURVEYS];
+      if (companyId) filtered = filtered.filter(s => s.companyId === companyId);
+      if (status) filtered = filtered.filter(s => s.status === status);
+      if (type) filtered = filtered.filter(s => s.type === type);
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: surveys,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },

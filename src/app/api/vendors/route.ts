@@ -38,6 +38,26 @@ export async function GET(req: NextRequest) {
       db.vendor.count({ where }),
     ]);
 
+    // If DB returns empty, use demo data fallback
+    if (vendors.length === 0 && total === 0) {
+      let filtered = [...DEMO_VENDORS];
+      if (status) filtered = filtered.filter(v => v.status === status);
+      if (companyId) filtered = filtered.filter(v => v.companyId === companyId);
+      if (search) {
+        const s = search.toLowerCase();
+        filtered = filtered.filter(v =>
+          v.name.toLowerCase().includes(s) ||
+          v.email.toLowerCase().includes(s) ||
+          v.vendorCompany.toLowerCase().includes(s) ||
+          v.serviceType.toLowerCase().includes(s)
+        );
+      }
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: vendors,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },

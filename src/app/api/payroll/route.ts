@@ -47,6 +47,24 @@ export async function GET(req: NextRequest) {
       _count: true,
     });
 
+    // If DB returns empty, use demo data fallback
+    if (records.length === 0 && total === 0) {
+      let filtered = [...DEMO_PAYROLL];
+      if (employeeId) filtered = filtered.filter(r => r.employeeId === employeeId);
+      if (month) filtered = filtered.filter(r => r.month === parseInt(month));
+      if (year) filtered = filtered.filter(r => r.year === parseInt(year));
+      if (status) filtered = filtered.filter(r => r.status === status);
+
+      const totalGross = filtered.reduce((s, r) => s + r.grossSalary, 0);
+      const totalDed = filtered.reduce((s, r) => s + r.totalDeductions, 0);
+      const totalNet = filtered.reduce((s, r) => s + r.netSalary, 0);
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+        summary: { totalGross, totalDeductions: totalDed, totalNet, recordCount: filtered.length },
+      });
+    }
+
     return NextResponse.json({
       data: records,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },

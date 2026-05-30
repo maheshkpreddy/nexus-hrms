@@ -44,6 +44,17 @@ export async function GET(req: NextRequest) {
       db.attendance.count({ where }),
     ]);
 
+    // If DB returns empty, use demo data fallback
+    if (records.length === 0 && total === 0) {
+      let filtered = [...DEMO_ATTENDANCE];
+      if (employeeId) filtered = filtered.filter(r => r.employeeId === employeeId);
+      if (status) filtered = filtered.filter(r => r.status === status);
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: records,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },

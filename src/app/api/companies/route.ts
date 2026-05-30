@@ -40,6 +40,22 @@ export async function GET(req: NextRequest) {
       db.company.count({ where }),
     ]);
 
+    // If DB returns empty, use demo data fallback
+    if (companies.length === 0 && total === 0) {
+      let filtered = [...DEMO_COMPANIES];
+      if (isActive !== null && isActive !== undefined) {
+        filtered = filtered.filter(c => c.isActive === (isActive === 'true'));
+      }
+      if (search) {
+        const q = search.toLowerCase();
+        filtered = filtered.filter(c => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || (c.industry || '').toLowerCase().includes(q));
+      }
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: companies,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },

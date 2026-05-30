@@ -45,6 +45,17 @@ export async function GET(req: NextRequest) {
       db.travelRequest.count({ where }),
     ]);
 
+    // If DB returns empty, use demo data fallback
+    if (requests.length === 0 && total === 0) {
+      let filtered = [...DEMO_TRAVEL];
+      if (status) filtered = filtered.filter(r => r.status === status);
+      if (employeeId) filtered = filtered.filter(r => r.employeeId === employeeId);
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: requests,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },

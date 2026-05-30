@@ -54,6 +54,18 @@ export async function GET(req: NextRequest) {
       db.leave.count({ where }),
     ]);
 
+    // If DB returns empty, use demo data fallback
+    if (leaves.length === 0 && total === 0) {
+      let filtered = [...DEMO_LEAVES];
+      if (status) filtered = filtered.filter(l => l.status === status);
+      if (type) filtered = filtered.filter(l => l.type.toLowerCase().includes(type.toLowerCase()));
+      if (employeeId) filtered = filtered.filter(l => l.employeeId === employeeId);
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: leaves,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },

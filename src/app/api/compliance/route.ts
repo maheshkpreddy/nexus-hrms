@@ -36,6 +36,21 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    // If DB returns empty, use demo data fallback
+    if (items.length === 0 && total === 0) {
+      let filtered = [...DEMO_COMPLIANCE];
+      if (companyId) filtered = filtered.filter(i => i.companyId === companyId);
+      if (status) filtered = filtered.filter(i => i.status === status);
+      if (category) filtered = filtered.filter(i => i.category === category);
+
+      const demoOverdueCount = filtered.filter(i => i.status === 'pending' && i.dueDate && new Date(i.dueDate) < new Date()).length;
+      return NextResponse.json({
+        data: filtered,
+        overdueCount: demoOverdueCount,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: items,
       overdueCount,

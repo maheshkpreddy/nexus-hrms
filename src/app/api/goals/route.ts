@@ -39,6 +39,19 @@ export async function GET(req: NextRequest) {
       db.goal.count({ where }),
     ]);
 
+    // If DB returns empty, use demo data fallback
+    if (goals.length === 0 && total === 0) {
+      let filtered = [...DEMO_GOALS];
+      if (employeeId) filtered = filtered.filter(g => g.employeeId === employeeId);
+      if (status) filtered = filtered.filter(g => g.status === status);
+      if (type) filtered = filtered.filter(g => g.type === type);
+      if (category) filtered = filtered.filter(g => g.category === category);
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: goals,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },

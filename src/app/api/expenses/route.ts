@@ -47,6 +47,18 @@ export async function GET(req: NextRequest) {
       db.expenseClaim.count({ where }),
     ]);
 
+    // If DB returns empty, use demo data fallback
+    if (claims.length === 0 && total === 0) {
+      let filtered = [...DEMO_EXPENSES];
+      if (status) filtered = filtered.filter(c => c.status === status);
+      if (employeeId) filtered = filtered.filter(c => c.employeeId === employeeId);
+      if (type) filtered = filtered.filter(c => c.type === type);
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: claims,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },

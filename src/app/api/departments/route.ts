@@ -29,6 +29,16 @@ export async function GET(req: NextRequest) {
 
     const total = await db.department.count({ where });
 
+    // If DB returns empty, use demo data fallback
+    if (departments.length === 0 && total === 0) {
+      let filtered = [...DEMO_DEPARTMENTS];
+      if (companyId) filtered = filtered.filter(d => d.companyId === companyId);
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: departments,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },

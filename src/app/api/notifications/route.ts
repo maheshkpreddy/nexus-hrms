@@ -38,6 +38,24 @@ export async function GET(req: NextRequest) {
       where: { userId, isRead: false },
     });
 
+    // If DB returns empty, use demo data fallback
+    if (notifications.length === 0 && total === 0) {
+      let filtered = DEMO_NOTIFICATIONS.map(n => ({ ...n, userId: userId || 'demo-admin' }));
+      if (isRead !== null && isRead !== undefined) {
+        const isReadVal = isRead === 'true';
+        filtered = filtered.filter(n => n.isRead === isReadVal);
+      }
+      if (type) filtered = filtered.filter(n => n.type === type);
+      if (category) filtered = filtered.filter(n => n.category === category);
+
+      const demoUnreadCount = filtered.filter(n => !n.isRead).length;
+      return NextResponse.json({
+        data: filtered,
+        unreadCount: demoUnreadCount,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: notifications,
       unreadCount,

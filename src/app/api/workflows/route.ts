@@ -35,6 +35,17 @@ export async function GET(req: NextRequest) {
         db.workflowDefinition.count({ where }),
       ]);
 
+      // If DB returns empty, use demo data fallback
+      if (definitions.length === 0 && total === 0) {
+        let filtered = [...DEMO_WORKFLOWS];
+        if (companyId) filtered = filtered.filter(d => d.companyId === companyId);
+        if (entity) filtered = filtered.filter(d => d.entity === entity);
+        return NextResponse.json({
+          data: filtered,
+          pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+        });
+      }
+
       return NextResponse.json({
         data: definitions,
         pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
@@ -60,6 +71,14 @@ export async function GET(req: NextRequest) {
         }),
         db.workflowInstance.count({ where }),
       ]);
+
+      // If DB returns empty, use demo data fallback (no demo instances, return empty)
+      if (instances.length === 0 && total === 0) {
+        return NextResponse.json({
+          data: [],
+          pagination: { page, limit, total: 0, totalPages: 0 },
+        });
+      }
 
       return NextResponse.json({
         data: instances,

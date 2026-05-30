@@ -38,6 +38,18 @@ export async function GET(req: NextRequest) {
       db.assetAllocation.count({ where }),
     ]);
 
+    // If DB returns empty, use demo data fallback
+    if (assets.length === 0 && total === 0) {
+      let filtered = [...DEMO_ASSETS];
+      if (employeeId) filtered = filtered.filter(a => a.employeeId === employeeId);
+      if (status) filtered = filtered.filter(a => a.status === status);
+      if (assetType) filtered = filtered.filter(a => a.assetType === assetType);
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: assets,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },

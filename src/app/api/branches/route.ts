@@ -30,6 +30,16 @@ export async function GET(req: NextRequest) {
 
     const total = await db.branch.count({ where });
 
+    // If DB returns empty, use demo data fallback
+    if (branches.length === 0 && total === 0) {
+      let filtered = [...DEMO_BRANCHES];
+      if (companyId) filtered = filtered.filter(b => b.companyId === companyId);
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: branches,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },

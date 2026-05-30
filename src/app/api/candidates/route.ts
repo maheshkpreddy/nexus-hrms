@@ -38,6 +38,26 @@ export async function GET(req: NextRequest) {
       db.candidate.count({ where }),
     ]);
 
+    // If DB returns empty, use demo data fallback
+    if (candidates.length === 0 && total === 0) {
+      let filtered = [...DEMO_CANDIDATES];
+      if (status) filtered = filtered.filter(c => c.status === status);
+      if (jobId) filtered = filtered.filter(c => c.jobId === jobId);
+      if (search) {
+        const s = search.toLowerCase();
+        filtered = filtered.filter(c =>
+          c.firstName.toLowerCase().includes(s) ||
+          c.lastName.toLowerCase().includes(s) ||
+          c.email.toLowerCase().includes(s) ||
+          c.currentCompany.toLowerCase().includes(s)
+        );
+      }
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: candidates,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },

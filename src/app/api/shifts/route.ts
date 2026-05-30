@@ -42,6 +42,20 @@ export async function GET(req: NextRequest) {
       db.shift.count({ where }),
     ]);
 
+    // If DB returns empty, use demo data fallback
+    if (shifts.length === 0 && total === 0) {
+      let filtered = [...DEMO_SHIFTS];
+      if (companyId) filtered = filtered.filter(s => s.companyId === companyId);
+      if (isActive !== null && isActive !== undefined) {
+        const active = isActive === 'true';
+        filtered = filtered.filter(s => s.isActive === active);
+      }
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: shifts,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },

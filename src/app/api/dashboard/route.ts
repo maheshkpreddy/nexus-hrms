@@ -14,6 +14,31 @@ export async function GET(req: NextRequest) {
       where: { ...companyFilter, status: 'active' },
     });
 
+    // If DB has no employees, use demo data fallback
+    if (totalEmployees === 0) {
+      const stats = DEMO_DASHBOARD_STATS;
+      const filteredRecentActivities = companyId
+        ? stats.recentActivities
+        : stats.recentActivities;
+      return NextResponse.json({
+        stats: {
+          totalEmployees: stats.totalEmployees,
+          activeEmployees: stats.activeEmployees,
+          newHires: stats.newHires,
+          openPositions: stats.openPositions,
+          attritionRate: stats.attritionRate,
+          attendanceRate: stats.attendanceRate,
+          pendingApprovals: stats.pendingApprovals,
+        },
+        recentActivities: filteredRecentActivities,
+        departmentStats: stats.departmentDistribution.map((d) => ({
+          departmentId: d.name.toLowerCase(),
+          departmentName: d.name,
+          count: Math.round(d.value / 50),
+        })),
+      });
+    }
+
     // New hires this month
     const now = new Date();
     const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);

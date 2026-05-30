@@ -39,6 +39,29 @@ export async function GET(req: NextRequest) {
       db.job.count({ where }),
     ]);
 
+    // If DB returns empty, use demo data fallback
+    if (jobs.length === 0 && total === 0) {
+      let filtered = [...DEMO_JOBS];
+      if (status) filtered = filtered.filter(j => j.status === status);
+      if (companyId) filtered = filtered.filter(j => j.companyId === companyId);
+      if (department) {
+        const dept = department.toLowerCase();
+        filtered = filtered.filter(j => j.department.toLowerCase().includes(dept));
+      }
+      if (search) {
+        const s = search.toLowerCase();
+        filtered = filtered.filter(j =>
+          j.title.toLowerCase().includes(s) ||
+          j.department.toLowerCase().includes(s) ||
+          j.location.toLowerCase().includes(s)
+        );
+      }
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: jobs,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },

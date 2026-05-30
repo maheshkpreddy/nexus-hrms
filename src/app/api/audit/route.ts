@@ -55,6 +55,31 @@ export async function GET(req: NextRequest) {
       _count: { id: true },
     });
 
+    // If DB returns empty, use demo data fallback
+    if (logs.length === 0 && total === 0) {
+      let filtered = [...DEMO_AUDIT_LOGS];
+      if (userId) filtered = filtered.filter(l => l.userId === userId);
+      if (action) filtered = filtered.filter(l => l.action === action);
+      if (entity) filtered = filtered.filter(l => l.entity === entity);
+
+      // Build summary from filtered data
+      const byAction: Record<string, number> = {};
+      const byEntity: Record<string, number> = {};
+      for (const log of filtered) {
+        byAction[log.action] = (byAction[log.action] || 0) + 1;
+        byEntity[log.entity] = (byEntity[log.entity] || 0) + 1;
+      }
+
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+        summary: {
+          byAction: Object.entries(byAction).map(([a, count]) => ({ action: a, count })),
+          byEntity: Object.entries(byEntity).map(([e, count]) => ({ entity: e, count })),
+        },
+      });
+    }
+
     return NextResponse.json({
       data: logs,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },

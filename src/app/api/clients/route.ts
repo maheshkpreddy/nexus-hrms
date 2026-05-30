@@ -37,6 +37,26 @@ export async function GET(req: NextRequest) {
       db.client.count({ where }),
     ]);
 
+    // If DB returns empty, use demo data fallback
+    if (clients.length === 0 && total === 0) {
+      let filtered = [...DEMO_CLIENTS];
+      if (status) filtered = filtered.filter(c => c.status === status);
+      if (companyId) filtered = filtered.filter(c => c.companyId === companyId);
+      if (search) {
+        const s = search.toLowerCase();
+        filtered = filtered.filter(c =>
+          c.name.toLowerCase().includes(s) ||
+          c.email.toLowerCase().includes(s) ||
+          c.clientCompany.toLowerCase().includes(s) ||
+          c.industry.toLowerCase().includes(s)
+        );
+      }
+      return NextResponse.json({
+        data: filtered,
+        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      });
+    }
+
     return NextResponse.json({
       data: clients,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
