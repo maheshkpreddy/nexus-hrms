@@ -1,17 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import { DEMO_PAYROLL } from '@/lib/demo-data';
 
+function filterDemoPayroll(params: { employeeId?: string | null; month?: string | null; year?: string | null; status?: string | null; page: number; limit: number }) {
+  let filtered = [...DEMO_PAYROLL];
+  if (params.employeeId) filtered = filtered.filter(r => r.employeeId === params.employeeId);
+  if (params.month) filtered = filtered.filter(r => r.month === parseInt(params.month!));
+  if (params.year) filtered = filtered.filter(r => r.year === parseInt(params.year!));
+  if (params.status) filtered = filtered.filter(r => r.status === params.status);
+
+  const totalGross = filtered.reduce((s, r) => s + r.grossSalary, 0);
+  const totalDed = filtered.reduce((s, r) => s + r.totalDeductions, 0);
+  const totalNet = filtered.reduce((s, r) => s + r.netSalary, 0);
+  return NextResponse.json({
+    data: filtered,
+    pagination: { page: params.page, limit: params.limit, total: filtered.length, totalPages: Math.ceil(filtered.length / params.limit) },
+    summary: { totalGross, totalDeductions: totalDed, totalNet, recordCount: filtered.length },
+  });
+}
+
 export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const employeeId = url.searchParams.get('employeeId');
+  const month = url.searchParams.get('month');
+  const year = url.searchParams.get('year');
+  const status = url.searchParams.get('status');
+  const companyId = url.searchParams.get('companyId');
+  const page = parseInt(url.searchParams.get('page') || '1');
+  const limit = parseInt(url.searchParams.get('limit') || '20');
+
   try {
-    const url = new URL(req.url);
-    const employeeId = url.searchParams.get('employeeId');
-    const month = url.searchParams.get('month');
-    const year = url.searchParams.get('year');
-    const status = url.searchParams.get('status');
-    const companyId = url.searchParams.get('companyId');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const { db } = await import('@/lib/db');
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
@@ -47,64 +65,30 @@ export async function GET(req: NextRequest) {
       _count: true,
     });
 
-    // If DB returns empty, use demo data fallback
-    if (records.length === 0 && total === 0) {
-      let filtered = [...DEMO_PAYROLL];
-      if (employeeId) filtered = filtered.filter(r => r.employeeId === employeeId);
-      if (month) filtered = filtered.filter(r => r.month === parseInt(month));
-      if (year) filtered = filtered.filter(r => r.year === parseInt(year));
-      if (status) filtered = filtered.filter(r => r.status === status);
-
-      const totalGross = filtered.reduce((s, r) => s + r.grossSalary, 0);
-      const totalDed = filtered.reduce((s, r) => s + r.totalDeductions, 0);
-      const totalNet = filtered.reduce((s, r) => s + r.netSalary, 0);
+    // If DB has real data, return it
+    if (records.length > 0 || total > 0) {
       return NextResponse.json({
-        data: filtered,
-        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
-        summary: { totalGross, totalDeductions: totalDed, totalNet, recordCount: filtered.length },
+        data: records,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+        summary: {
+          totalGross: summary._sum.grossSalary || 0,
+          totalDeductions: summary._sum.totalDeductions || 0,
+          totalNet: summary._sum.netSalary || 0,
+          recordCount: summary._count,
+        },
       });
     }
-
-    return NextResponse.json({
-      data: records,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-      summary: {
-        totalGross: summary._sum.grossSalary || 0,
-        totalDeductions: summary._sum.totalDeductions || 0,
-        totalNet: summary._sum.netSalary || 0,
-        recordCount: summary._count,
-      },
-    });
   } catch (error) {
-    console.error('Payroll GET error:', error);
-    // Fallback to DEMO_PAYROLL from demo-data.ts
-    const url = new URL(req.url);
-    const employeeId = url.searchParams.get('employeeId');
-    const month = url.searchParams.get('month');
-    const year = url.searchParams.get('year');
-    const status = url.searchParams.get('status');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
-
-    let filtered = [...DEMO_PAYROLL];
-    if (employeeId) filtered = filtered.filter(r => r.employeeId === employeeId);
-    if (month) filtered = filtered.filter(r => r.month === parseInt(month));
-    if (year) filtered = filtered.filter(r => r.year === parseInt(year));
-    if (status) filtered = filtered.filter(r => r.status === status);
-
-    const totalGross = filtered.reduce((s, r) => s + r.grossSalary, 0);
-    const totalDed = filtered.reduce((s, r) => s + r.totalDeductions, 0);
-    const totalNet = filtered.reduce((s, r) => s + r.netSalary, 0);
-    return NextResponse.json({
-      data: filtered,
-      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
-      summary: { totalGross, totalDeductions: totalDed, totalNet, recordCount: filtered.length },
-    });
+    console.error('Payroll GET error, using demo data:', error);
   }
+
+  // Demo data fallback (when DB is empty or unavailable)
+  return filterDemoPayroll({ employeeId, month, year, status, page, limit });
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const { db } = await import('@/lib/db');
     const body = await req.json();
     const {
       employeeId, month, year, basicPay, grossSalary,
@@ -163,6 +147,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    const { db } = await import('@/lib/db');
     const body = await req.json();
     const { id, ...updateData } = body;
 

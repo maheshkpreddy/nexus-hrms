@@ -1,15 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import { DEMO_VENDORS } from '@/lib/demo-data';
 
+function filterDemoVendors(params: { status?: string | null; companyId?: string | null; search?: string | null; page: number; limit: number }) {
+  let filtered = [...DEMO_VENDORS];
+  if (params.status) filtered = filtered.filter(v => v.status === params.status);
+  if (params.companyId) filtered = filtered.filter(v => v.companyId === params.companyId);
+  if (params.search) {
+    const s = params.search.toLowerCase();
+    filtered = filtered.filter(v =>
+      v.name.toLowerCase().includes(s) ||
+      v.email.toLowerCase().includes(s) ||
+      v.vendorCompany.toLowerCase().includes(s) ||
+      v.serviceType.toLowerCase().includes(s)
+    );
+  }
+  return NextResponse.json({
+    data: filtered,
+    pagination: { page: params.page, limit: params.limit, total: filtered.length, totalPages: Math.ceil(filtered.length / params.limit) },
+  });
+}
+
 export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const status = url.searchParams.get('status');
+  const companyId = url.searchParams.get('companyId');
+  const search = url.searchParams.get('search');
+  const page = parseInt(url.searchParams.get('page') || '1');
+  const limit = parseInt(url.searchParams.get('limit') || '20');
+
   try {
-    const url = new URL(req.url);
-    const status = url.searchParams.get('status');
-    const companyId = url.searchParams.get('companyId');
-    const search = url.searchParams.get('search');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const { db } = await import('@/lib/db');
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
@@ -38,62 +58,24 @@ export async function GET(req: NextRequest) {
       db.vendor.count({ where }),
     ]);
 
-    // If DB returns empty, use demo data fallback
-    if (vendors.length === 0 && total === 0) {
-      let filtered = [...DEMO_VENDORS];
-      if (status) filtered = filtered.filter(v => v.status === status);
-      if (companyId) filtered = filtered.filter(v => v.companyId === companyId);
-      if (search) {
-        const s = search.toLowerCase();
-        filtered = filtered.filter(v =>
-          v.name.toLowerCase().includes(s) ||
-          v.email.toLowerCase().includes(s) ||
-          v.vendorCompany.toLowerCase().includes(s) ||
-          v.serviceType.toLowerCase().includes(s)
-        );
-      }
+    // If DB has real data, return it
+    if (vendors.length > 0 || total > 0) {
       return NextResponse.json({
-        data: filtered,
-        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+        data: vendors,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
       });
     }
-
-    return NextResponse.json({
-      data: vendors,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-    });
   } catch (error) {
-    console.error('Vendors GET error:', error);
-    // Fallback to DEMO_VENDORS from demo-data.ts
-    const url = new URL(req.url);
-    const status = url.searchParams.get('status');
-    const companyId = url.searchParams.get('companyId');
-    const search = url.searchParams.get('search');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
-
-    let filtered = [...DEMO_VENDORS];
-    if (status) filtered = filtered.filter(v => v.status === status);
-    if (companyId) filtered = filtered.filter(v => v.companyId === companyId);
-    if (search) {
-      const s = search.toLowerCase();
-      filtered = filtered.filter(v =>
-        v.name.toLowerCase().includes(s) ||
-        v.email.toLowerCase().includes(s) ||
-        v.vendorCompany.toLowerCase().includes(s) ||
-        v.serviceType.toLowerCase().includes(s)
-      );
-    }
-
-    return NextResponse.json({
-      data: filtered,
-      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
-    });
+    console.error('Vendors GET error, using demo data:', error);
   }
+
+  // Demo data fallback (when DB is empty or unavailable)
+  return filterDemoVendors({ status, companyId, search, page, limit });
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const { db } = await import('@/lib/db');
     const body = await req.json();
     const { name, email, phone, vendorCompany, serviceType, status, rating, companyId, subVendors } = body;
 
@@ -143,6 +125,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    const { db } = await import('@/lib/db');
     const body = await req.json();
     const { id, subVendors, ...updateData } = body;
 

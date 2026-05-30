@@ -60,12 +60,12 @@ function getDemoAnalyticsData() {
 }
 
 export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const companyId = url.searchParams.get('companyId');
+  const period = url.searchParams.get('period') || '12m';
+
   try {
     const { db } = await import('@/lib/db');
-    const url = new URL(req.url);
-    const companyId = url.searchParams.get('companyId');
-    const period = url.searchParams.get('period') || '12m';
-
     const companyFilter = companyId ? { companyId } : {};
 
     // Calculate date range based on period
@@ -335,7 +335,7 @@ export async function GET(req: NextRequest) {
       })),
     });
   } catch (error) {
-    console.error('Analytics error - returning demo data:', error);
+    console.error('Analytics error, using demo data:', error);
     // Return demo data instead of 500 error
     return NextResponse.json(getDemoAnalyticsData());
   }

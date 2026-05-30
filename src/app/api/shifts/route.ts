@@ -1,14 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import { DEMO_SHIFTS } from '@/lib/demo-data';
 
+function filterDemoShifts(params: { companyId?: string | null; isActive?: string | null; page: number; limit: number }) {
+  let filtered = [...DEMO_SHIFTS];
+  if (params.companyId) filtered = filtered.filter(s => s.companyId === params.companyId);
+  if (params.isActive !== null && params.isActive !== undefined) {
+    const active = params.isActive === 'true';
+    filtered = filtered.filter(s => s.isActive === active);
+  }
+  return NextResponse.json({
+    data: filtered,
+    pagination: { page: params.page, limit: params.limit, total: filtered.length, totalPages: Math.ceil(filtered.length / params.limit) },
+  });
+}
+
 export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const companyId = url.searchParams.get('companyId');
+  const isActive = url.searchParams.get('isActive');
+  const page = parseInt(url.searchParams.get('page') || '1');
+  const limit = parseInt(url.searchParams.get('limit') || '20');
+
   try {
-    const url = new URL(req.url);
-    const companyId = url.searchParams.get('companyId');
-    const isActive = url.searchParams.get('isActive');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const { db } = await import('@/lib/db');
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
@@ -42,49 +56,24 @@ export async function GET(req: NextRequest) {
       db.shift.count({ where }),
     ]);
 
-    // If DB returns empty, use demo data fallback
-    if (shifts.length === 0 && total === 0) {
-      let filtered = [...DEMO_SHIFTS];
-      if (companyId) filtered = filtered.filter(s => s.companyId === companyId);
-      if (isActive !== null && isActive !== undefined) {
-        const active = isActive === 'true';
-        filtered = filtered.filter(s => s.isActive === active);
-      }
+    // If DB has real data, return it
+    if (shifts.length > 0 || total > 0) {
       return NextResponse.json({
-        data: filtered,
-        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+        data: shifts,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
       });
     }
-
-    return NextResponse.json({
-      data: shifts,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-    });
   } catch (error) {
-    console.error('Shifts GET error:', error);
-    // Fallback to DEMO_SHIFTS from demo-data.ts
-    const url = new URL(req.url);
-    const companyId = url.searchParams.get('companyId');
-    const isActiveParam = url.searchParams.get('isActive');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
-
-    let filtered = [...DEMO_SHIFTS];
-    if (companyId) filtered = filtered.filter(s => s.companyId === companyId);
-    if (isActiveParam !== null && isActiveParam !== undefined) {
-      const active = isActiveParam === 'true';
-      filtered = filtered.filter(s => s.isActive === active);
-    }
-
-    return NextResponse.json({
-      data: filtered,
-      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
-    });
+    console.error('Shifts GET error, using demo data:', error);
   }
+
+  // Demo data fallback (when DB is empty or unavailable)
+  return filterDemoShifts({ companyId, isActive, page, limit });
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const { db } = await import('@/lib/db');
     const body = await req.json();
     const { name, startTime, endTime, breakMinutes, isActive, companyId, members } = body;
 
@@ -137,6 +126,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    const { db } = await import('@/lib/db');
     const body = await req.json();
     const { id, members, ...updateData } = body;
 

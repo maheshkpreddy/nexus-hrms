@@ -1,17 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import { DEMO_EMPLOYEES } from '@/lib/demo-data';
 
+function filterDemoEmployees(params: { search?: string | null; departmentId?: string | null; status?: string | null; companyId?: string | null; branchId?: string | null; page: number; limit: number }) {
+  let filtered = [...DEMO_EMPLOYEES];
+  if (params.search) {
+    const q = params.search.toLowerCase();
+    filtered = filtered.filter(e => e.firstName.toLowerCase().includes(q) || e.lastName.toLowerCase().includes(q) || e.email.toLowerCase().includes(q) || e.designation.toLowerCase().includes(q));
+  }
+  if (params.status) filtered = filtered.filter(e => e.status === params.status);
+  if (params.departmentId) filtered = filtered.filter(e => e.department.id === params.departmentId);
+  if (params.companyId) filtered = filtered.filter(e => e.company.id === params.companyId);
+  if (params.branchId) filtered = filtered.filter(e => e.branch?.id === params.branchId);
+  return NextResponse.json({
+    data: filtered,
+    pagination: { page: params.page, limit: params.limit, total: filtered.length, totalPages: Math.ceil(filtered.length / params.limit) },
+  });
+}
+
 export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const search = url.searchParams.get('search');
+  const departmentId = url.searchParams.get('departmentId');
+  const status = url.searchParams.get('status');
+  const companyId = url.searchParams.get('companyId');
+  const branchId = url.searchParams.get('branchId');
+  const page = parseInt(url.searchParams.get('page') || '1');
+  const limit = parseInt(url.searchParams.get('limit') || '20');
+
   try {
-    const url = new URL(req.url);
-    const search = url.searchParams.get('search');
-    const departmentId = url.searchParams.get('departmentId');
-    const status = url.searchParams.get('status');
-    const companyId = url.searchParams.get('companyId');
-    const branchId = url.searchParams.get('branchId');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const { db } = await import('@/lib/db');
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
@@ -45,58 +62,19 @@ export async function GET(req: NextRequest) {
       db.employee.count({ where }),
     ]);
 
-    // If DB returns empty, use demo data fallback
-    if (employees.length === 0 && total === 0) {
-      let filtered = [...DEMO_EMPLOYEES];
-      if (search) {
-        const q = search.toLowerCase();
-        filtered = filtered.filter(e => e.firstName.toLowerCase().includes(q) || e.lastName.toLowerCase().includes(q) || e.email.toLowerCase().includes(q) || e.designation.toLowerCase().includes(q));
-      }
-      if (status) filtered = filtered.filter(e => e.status === status);
-      if (departmentId) filtered = filtered.filter(e => e.department.id === departmentId);
-      if (companyId) filtered = filtered.filter(e => e.company.id === companyId);
-      if (branchId) filtered = filtered.filter(e => e.branch?.id === branchId);
+    // If DB has real data, return it; otherwise use demo data
+    if (employees.length > 0 || total > 0) {
       return NextResponse.json({
-        data: filtered,
-        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+        data: employees,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
       });
     }
-
-    return NextResponse.json({
-      data: employees,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
   } catch (error) {
-    console.error('Employees GET error:', error);
-    // Fallback to DEMO_EMPLOYEES from demo-data.ts
-    const url = new URL(req.url);
-    const search = url.searchParams.get('search');
-    const departmentId = url.searchParams.get('departmentId');
-    const status = url.searchParams.get('status');
-    const companyId = url.searchParams.get('companyId');
-    const branchId = url.searchParams.get('branchId');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
-
-    let filtered = [...DEMO_EMPLOYEES];
-    if (search) {
-      const q = search.toLowerCase();
-      filtered = filtered.filter(e => e.firstName.toLowerCase().includes(q) || e.lastName.toLowerCase().includes(q) || e.email.toLowerCase().includes(q) || e.designation.toLowerCase().includes(q));
-    }
-    if (status) filtered = filtered.filter(e => e.status === status);
-    if (departmentId) filtered = filtered.filter(e => e.department.id === departmentId);
-    if (companyId) filtered = filtered.filter(e => e.company.id === companyId);
-    if (branchId) filtered = filtered.filter(e => e.branch?.id === branchId);
-    return NextResponse.json({
-      data: filtered,
-      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
-    });
+    console.error('Employees GET error, using demo data:', error);
   }
+
+  // Demo data fallback (when DB is empty or unavailable)
+  return filterDemoEmployees({ search, departmentId, status, companyId, branchId, page, limit });
 }
 
 export async function POST(req: NextRequest) {

@@ -1,16 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import { DEMO_NOTIFICATIONS } from '@/lib/demo-data';
 
+function filterDemoNotifications(params: { userId?: string | null; isRead?: string | null; type?: string | null; category?: string | null; page: number; limit: number }) {
+  let filtered = DEMO_NOTIFICATIONS.map(n => ({ ...n, userId: params.userId || 'demo-admin' }));
+  if (params.isRead !== null && params.isRead !== undefined) {
+    const isReadVal = params.isRead === 'true';
+    filtered = filtered.filter(n => n.isRead === isReadVal);
+  }
+  if (params.type) filtered = filtered.filter(n => n.type === params.type);
+  if (params.category) filtered = filtered.filter(n => n.category === params.category);
+
+  const unreadCount = filtered.filter(n => !n.isRead).length;
+  return NextResponse.json({
+    data: filtered,
+    unreadCount,
+    pagination: { page: params.page, limit: params.limit, total: filtered.length, totalPages: Math.ceil(filtered.length / params.limit) },
+  });
+}
+
 export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const userId = url.searchParams.get('userId');
+  const isRead = url.searchParams.get('isRead');
+  const type = url.searchParams.get('type');
+  const category = url.searchParams.get('category');
+  const page = parseInt(url.searchParams.get('page') || '1');
+  const limit = parseInt(url.searchParams.get('limit') || '20');
+
   try {
-    const url = new URL(req.url);
-    const userId = url.searchParams.get('userId');
-    const isRead = url.searchParams.get('isRead');
-    const type = url.searchParams.get('type');
-    const category = url.searchParams.get('category');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const { db } = await import('@/lib/db');
     const skip = (page - 1) * limit;
 
     if (!userId) {
@@ -38,60 +56,25 @@ export async function GET(req: NextRequest) {
       where: { userId, isRead: false },
     });
 
-    // If DB returns empty, use demo data fallback
-    if (notifications.length === 0 && total === 0) {
-      let filtered = DEMO_NOTIFICATIONS.map(n => ({ ...n, userId: userId || 'demo-admin' }));
-      if (isRead !== null && isRead !== undefined) {
-        const isReadVal = isRead === 'true';
-        filtered = filtered.filter(n => n.isRead === isReadVal);
-      }
-      if (type) filtered = filtered.filter(n => n.type === type);
-      if (category) filtered = filtered.filter(n => n.category === category);
-
-      const demoUnreadCount = filtered.filter(n => !n.isRead).length;
+    // If DB has real data, return it
+    if (notifications.length > 0 || total > 0) {
       return NextResponse.json({
-        data: filtered,
-        unreadCount: demoUnreadCount,
-        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+        data: notifications,
+        unreadCount,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
       });
     }
-
-    return NextResponse.json({
-      data: notifications,
-      unreadCount,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-    });
   } catch (error) {
-    console.error('Notifications GET error:', error);
-    // Fallback to DEMO_NOTIFICATIONS from demo-data.ts
-    const url = new URL(req.url);
-    const userId = url.searchParams.get('userId');
-    const isReadParam = url.searchParams.get('isRead');
-    const type = url.searchParams.get('type');
-    const category = url.searchParams.get('category');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
-
-    let filtered = DEMO_NOTIFICATIONS.map(n => ({ ...n, userId: userId || 'demo-admin' }));
-    if (isReadParam !== null && isReadParam !== undefined) {
-      const isRead = isReadParam === 'true';
-      filtered = filtered.filter(n => n.isRead === isRead);
-    }
-    if (type) filtered = filtered.filter(n => n.type === type);
-    if (category) filtered = filtered.filter(n => n.category === category);
-
-    const unreadCount = filtered.filter(n => !n.isRead).length;
-
-    return NextResponse.json({
-      data: filtered,
-      unreadCount,
-      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
-    });
+    console.error('Notifications GET error, using demo data:', error);
   }
+
+  // Demo data fallback (when DB is empty or unavailable)
+  return filterDemoNotifications({ userId, isRead, type, category, page, limit });
 }
 
 export async function PATCH(req: NextRequest) {
   try {
+    const { db } = await import('@/lib/db');
     const body = await req.json();
     const { id, userId, markAllRead } = body;
 
@@ -134,6 +117,7 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const { db } = await import('@/lib/db');
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
     const userId = url.searchParams.get('userId');

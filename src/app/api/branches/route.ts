@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import { DEMO_BRANCHES } from '@/lib/demo-data';
 
+function filterDemoBranches(params: { companyId?: string | null; page: number; limit: number }) {
+  let filtered = [...DEMO_BRANCHES];
+  if (params.companyId) filtered = filtered.filter(b => b.companyId === params.companyId);
+  return NextResponse.json({
+    data: filtered,
+    pagination: { page: params.page, limit: params.limit, total: filtered.length, totalPages: Math.ceil(filtered.length / params.limit) },
+  });
+}
+
 export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const companyId = url.searchParams.get('companyId');
+  const page = parseInt(url.searchParams.get('page') || '1');
+  const limit = parseInt(url.searchParams.get('limit') || '100');
+
   try {
-    const url = new URL(req.url);
-    const companyId = url.searchParams.get('companyId');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '100');
+    const { db } = await import('@/lib/db');
 
     const where: Record<string, unknown> = { isActive: true };
     if (companyId) where.companyId = companyId;
@@ -30,34 +40,17 @@ export async function GET(req: NextRequest) {
 
     const total = await db.branch.count({ where });
 
-    // If DB returns empty, use demo data fallback
-    if (branches.length === 0 && total === 0) {
-      let filtered = [...DEMO_BRANCHES];
-      if (companyId) filtered = filtered.filter(b => b.companyId === companyId);
+    // If DB has real data, return it
+    if (branches.length > 0 || total > 0) {
       return NextResponse.json({
-        data: filtered,
-        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+        data: branches,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
       });
     }
-
-    return NextResponse.json({
-      data: branches,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-    });
   } catch (error) {
-    console.error('Branches GET error:', error);
-    // Fallback to DEMO_BRANCHES from demo-data.ts
-    const url = new URL(req.url);
-    const companyId = url.searchParams.get('companyId');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '100');
-
-    let filtered = [...DEMO_BRANCHES];
-    if (companyId) filtered = filtered.filter(b => b.companyId === companyId);
-
-    return NextResponse.json({
-      data: filtered,
-      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
-    });
+    console.error('Branches GET error, using demo data:', error);
   }
+
+  // Demo data fallback (when DB is empty or unavailable)
+  return filterDemoBranches({ companyId, page, limit });
 }

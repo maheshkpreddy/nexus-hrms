@@ -1,17 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import { DEMO_GOALS } from '@/lib/demo-data';
 
+function filterDemoGoals(params: { employeeId?: string | null; status?: string | null; type?: string | null; category?: string | null; page: number; limit: number }) {
+  let filtered = [...DEMO_GOALS];
+  if (params.employeeId) filtered = filtered.filter(g => g.employeeId === params.employeeId);
+  if (params.status) filtered = filtered.filter(g => g.status === params.status);
+  if (params.type) filtered = filtered.filter(g => g.type === params.type);
+  if (params.category) filtered = filtered.filter(g => g.category === params.category);
+  return NextResponse.json({
+    data: filtered,
+    pagination: { page: params.page, limit: params.limit, total: filtered.length, totalPages: Math.ceil(filtered.length / params.limit) },
+  });
+}
+
 export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const employeeId = url.searchParams.get('employeeId');
+  const status = url.searchParams.get('status');
+  const type = url.searchParams.get('type');
+  const category = url.searchParams.get('category');
+  const companyId = url.searchParams.get('companyId');
+  const page = parseInt(url.searchParams.get('page') || '1');
+  const limit = parseInt(url.searchParams.get('limit') || '20');
+
   try {
-    const url = new URL(req.url);
-    const employeeId = url.searchParams.get('employeeId');
-    const status = url.searchParams.get('status');
-    const type = url.searchParams.get('type');
-    const category = url.searchParams.get('category');
-    const companyId = url.searchParams.get('companyId');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const { db } = await import('@/lib/db');
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
@@ -39,49 +52,24 @@ export async function GET(req: NextRequest) {
       db.goal.count({ where }),
     ]);
 
-    // If DB returns empty, use demo data fallback
-    if (goals.length === 0 && total === 0) {
-      let filtered = [...DEMO_GOALS];
-      if (employeeId) filtered = filtered.filter(g => g.employeeId === employeeId);
-      if (status) filtered = filtered.filter(g => g.status === status);
-      if (type) filtered = filtered.filter(g => g.type === type);
-      if (category) filtered = filtered.filter(g => g.category === category);
+    // If DB has real data, return it
+    if (goals.length > 0 || total > 0) {
       return NextResponse.json({
-        data: filtered,
-        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+        data: goals,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
       });
     }
-
-    return NextResponse.json({
-      data: goals,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-    });
   } catch (error) {
-    console.error('Goals GET error:', error);
-    // Fallback to DEMO_GOALS from demo-data.ts
-    const url = new URL(req.url);
-    const employeeId = url.searchParams.get('employeeId');
-    const status = url.searchParams.get('status');
-    const type = url.searchParams.get('type');
-    const category = url.searchParams.get('category');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
-
-    let filtered = [...DEMO_GOALS];
-    if (employeeId) filtered = filtered.filter(g => g.employeeId === employeeId);
-    if (status) filtered = filtered.filter(g => g.status === status);
-    if (type) filtered = filtered.filter(g => g.type === type);
-    if (category) filtered = filtered.filter(g => g.category === category);
-
-    return NextResponse.json({
-      data: filtered,
-      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
-    });
+    console.error('Goals GET error, using demo data:', error);
   }
+
+  // Demo data fallback (when DB is empty or unavailable)
+  return filterDemoGoals({ employeeId, status, type, category, page, limit });
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const { db } = await import('@/lib/db');
     const body = await req.json();
     const { title, description, type, category, progress, status, startDate, endDate, employeeId } = body;
 
@@ -127,6 +115,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    const { db } = await import('@/lib/db');
     const body = await req.json();
     const { id, ...updateData } = body;
 

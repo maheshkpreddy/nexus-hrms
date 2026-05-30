@@ -1,17 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import { DEMO_ATTENDANCE } from '@/lib/demo-data';
 
+function filterDemoAttendance(params: { employeeId?: string | null; status?: string | null; page: number; limit: number }) {
+  let filtered = [...DEMO_ATTENDANCE];
+  if (params.employeeId) filtered = filtered.filter(r => r.employeeId === params.employeeId);
+  if (params.status) filtered = filtered.filter(r => r.status === params.status);
+  return NextResponse.json({
+    data: filtered,
+    pagination: { page: params.page, limit: params.limit, total: filtered.length, totalPages: Math.ceil(filtered.length / params.limit) },
+  });
+}
+
 export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const employeeId = url.searchParams.get('employeeId');
+  const status = url.searchParams.get('status');
+  const startDate = url.searchParams.get('startDate');
+  const endDate = url.searchParams.get('endDate');
+  const companyId = url.searchParams.get('companyId');
+  const page = parseInt(url.searchParams.get('page') || '1');
+  const limit = parseInt(url.searchParams.get('limit') || '20');
+
   try {
-    const url = new URL(req.url);
-    const employeeId = url.searchParams.get('employeeId');
-    const status = url.searchParams.get('status');
-    const startDate = url.searchParams.get('startDate');
-    const endDate = url.searchParams.get('endDate');
-    const companyId = url.searchParams.get('companyId');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const { db } = await import('@/lib/db');
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
@@ -44,42 +55,24 @@ export async function GET(req: NextRequest) {
       db.attendance.count({ where }),
     ]);
 
-    // If DB returns empty, use demo data fallback
-    if (records.length === 0 && total === 0) {
-      let filtered = [...DEMO_ATTENDANCE];
-      if (employeeId) filtered = filtered.filter(r => r.employeeId === employeeId);
-      if (status) filtered = filtered.filter(r => r.status === status);
+    // If DB has real data, return it
+    if (records.length > 0 || total > 0) {
       return NextResponse.json({
-        data: filtered,
-        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+        data: records,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
       });
     }
-
-    return NextResponse.json({
-      data: records,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-    });
   } catch (error) {
-    console.error('Attendance GET error:', error);
-    // Fallback to DEMO_ATTENDANCE from demo-data.ts
-    const url = new URL(req.url);
-    const employeeId = url.searchParams.get('employeeId');
-    const status = url.searchParams.get('status');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
-
-    let filtered = [...DEMO_ATTENDANCE];
-    if (employeeId) filtered = filtered.filter(r => r.employeeId === employeeId);
-    if (status) filtered = filtered.filter(r => r.status === status);
-    return NextResponse.json({
-      data: filtered,
-      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
-    });
+    console.error('Attendance GET error, using demo data:', error);
   }
+
+  // Demo data fallback (when DB is empty or unavailable)
+  return filterDemoAttendance({ employeeId, status, page, limit });
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const { db } = await import('@/lib/db');
     const body = await req.json();
     const { employeeId, date, checkIn, source, notes } = body;
 
@@ -147,6 +140,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    const { db } = await import('@/lib/db');
     const body = await req.json();
     const { id, employeeId, date, checkOut, breakDuration, notes } = body;
 

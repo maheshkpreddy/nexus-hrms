@@ -1,12 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DEMO_DASHBOARD_STATS } from '@/lib/demo-data';
 
+function getDemoDashboardData(companyId?: string | null) {
+  const stats = DEMO_DASHBOARD_STATS;
+  const filteredRecentActivities = companyId
+    ? stats.recentActivities
+    : stats.recentActivities;
+  return NextResponse.json({
+    stats: {
+      totalEmployees: stats.totalEmployees,
+      activeEmployees: stats.activeEmployees,
+      newHires: stats.newHires,
+      openPositions: stats.openPositions,
+      attritionRate: stats.attritionRate,
+      attendanceRate: stats.attendanceRate,
+      pendingApprovals: stats.pendingApprovals,
+    },
+    recentActivities: filteredRecentActivities,
+    departmentStats: stats.departmentDistribution.map((d) => ({
+      departmentId: d.name.toLowerCase(),
+      departmentName: d.name,
+      count: Math.round(d.value / 50),
+    })),
+  });
+}
+
 export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const companyId = url.searchParams.get('companyId');
+  const userId = url.searchParams.get('userId');
+
   try {
     const { db } = await import('@/lib/db');
-    const url = new URL(req.url);
-    const companyId = url.searchParams.get('companyId');
-
     const companyFilter = companyId ? { companyId } : {};
 
     // Total employees
@@ -16,27 +41,7 @@ export async function GET(req: NextRequest) {
 
     // If DB has no employees, use demo data fallback
     if (totalEmployees === 0) {
-      const stats = DEMO_DASHBOARD_STATS;
-      const filteredRecentActivities = companyId
-        ? stats.recentActivities
-        : stats.recentActivities;
-      return NextResponse.json({
-        stats: {
-          totalEmployees: stats.totalEmployees,
-          activeEmployees: stats.activeEmployees,
-          newHires: stats.newHires,
-          openPositions: stats.openPositions,
-          attritionRate: stats.attritionRate,
-          attendanceRate: stats.attendanceRate,
-          pendingApprovals: stats.pendingApprovals,
-        },
-        recentActivities: filteredRecentActivities,
-        departmentStats: stats.departmentDistribution.map((d) => ({
-          departmentId: d.name.toLowerCase(),
-          departmentName: d.name,
-          count: Math.round(d.value / 50),
-        })),
-      });
+      return getDemoDashboardData(companyId);
     }
 
     // New hires this month
@@ -103,7 +108,6 @@ export async function GET(req: NextRequest) {
     });
 
     // Notifications count
-    const userId = url.searchParams.get('userId');
     let unreadNotifications = 0;
     let recentNotifications: unknown[] = [];
     if (userId) {
@@ -151,33 +155,8 @@ export async function GET(req: NextRequest) {
       departmentStats,
     });
   } catch (error) {
-    console.error('Dashboard error - returning demo data:', error);
-    // Fallback to DEMO_DASHBOARD_STATS from demo-data.ts
-    const url = new URL(req.url);
-    const companyId = url.searchParams.get('companyId');
-    const stats = DEMO_DASHBOARD_STATS;
-
-    // Filter employees by company if needed
-    const filteredRecentActivities = companyId
-      ? stats.recentActivities
-      : stats.recentActivities;
-
-    return NextResponse.json({
-      stats: {
-        totalEmployees: stats.totalEmployees,
-        activeEmployees: stats.activeEmployees,
-        newHires: stats.newHires,
-        openPositions: stats.openPositions,
-        attritionRate: stats.attritionRate,
-        attendanceRate: stats.attendanceRate,
-        pendingApprovals: stats.pendingApprovals,
-      },
-      recentActivities: filteredRecentActivities,
-      departmentStats: stats.departmentDistribution.map((d) => ({
-        departmentId: d.name.toLowerCase(),
-        departmentName: d.name,
-        count: Math.round(d.value / 50),
-      })),
-    });
+    console.error('Dashboard error, using demo data:', error);
+    // Fallback to DEMO_DASHBOARD_STATS
+    return getDemoDashboardData(companyId);
   }
 }

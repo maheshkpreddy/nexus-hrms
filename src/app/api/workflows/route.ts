@@ -1,17 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import { DEMO_WORKFLOWS } from '@/lib/demo-data';
+
+function filterDemoWorkflows(params: { companyId?: string | null; entity?: string | null; page: number; limit: number }) {
+  let filtered = [...DEMO_WORKFLOWS];
+  if (params.companyId) filtered = filtered.filter(d => d.companyId === params.companyId);
+  if (params.entity) filtered = filtered.filter(d => d.entity === params.entity);
+  return NextResponse.json({
+    data: filtered,
+    pagination: { page: params.page, limit: params.limit, total: filtered.length, totalPages: Math.ceil(filtered.length / params.limit) },
+  });
+}
 
 // GET: List workflow definitions and instances
 export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const type = url.searchParams.get('type'); // 'definitions' or 'instances'
+  const companyId = url.searchParams.get('companyId');
+  const entity = url.searchParams.get('entity');
+  const status = url.searchParams.get('status');
+  const page = parseInt(url.searchParams.get('page') || '1');
+  const limit = parseInt(url.searchParams.get('limit') || '20');
+
   try {
-    const url = new URL(req.url);
-    const type = url.searchParams.get('type'); // 'definitions' or 'instances'
-    const companyId = url.searchParams.get('companyId');
-    const entity = url.searchParams.get('entity');
-    const status = url.searchParams.get('status');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const { db } = await import('@/lib/db');
     const skip = (page - 1) * limit;
 
     if (type === 'definitions' || !type) {
@@ -35,21 +46,13 @@ export async function GET(req: NextRequest) {
         db.workflowDefinition.count({ where }),
       ]);
 
-      // If DB returns empty, use demo data fallback
-      if (definitions.length === 0 && total === 0) {
-        let filtered = [...DEMO_WORKFLOWS];
-        if (companyId) filtered = filtered.filter(d => d.companyId === companyId);
-        if (entity) filtered = filtered.filter(d => d.entity === entity);
+      // If DB has real data, return it
+      if (definitions.length > 0 || total > 0) {
         return NextResponse.json({
-          data: filtered,
-          pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+          data: definitions,
+          pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
         });
       }
-
-      return NextResponse.json({
-        data: definitions,
-        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-      });
     } else {
       // List workflow instances
       const where: Record<string, unknown> = {};
@@ -72,51 +75,34 @@ export async function GET(req: NextRequest) {
         db.workflowInstance.count({ where }),
       ]);
 
-      // If DB returns empty, use demo data fallback (no demo instances, return empty)
-      if (instances.length === 0 && total === 0) {
+      // If DB has real data, return it
+      if (instances.length > 0 || total > 0) {
         return NextResponse.json({
-          data: [],
-          pagination: { page, limit, total: 0, totalPages: 0 },
+          data: instances,
+          pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
         });
       }
-
-      return NextResponse.json({
-        data: instances,
-        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-      });
     }
   } catch (error) {
-    console.error('Workflows GET error:', error);
-    // Fallback to DEMO_WORKFLOWS from demo-data.ts
-    const url = new URL(req.url);
-    const type = url.searchParams.get('type');
-    const companyId = url.searchParams.get('companyId');
-    const entity = url.searchParams.get('entity');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
+    console.error('Workflows GET error, using demo data:', error);
+  }
 
-    if (type === 'definitions' || !type) {
-      let filtered = [...DEMO_WORKFLOWS];
-      if (companyId) filtered = filtered.filter(d => d.companyId === companyId);
-      if (entity) filtered = filtered.filter(d => d.entity === entity);
-
-      return NextResponse.json({
-        data: filtered,
-        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
-      });
-    } else {
-      // For instances fallback, return empty since we don't have demo instances
-      return NextResponse.json({
-        data: [],
-        pagination: { page, limit, total: 0, totalPages: 0 },
-      });
-    }
+  // Demo data fallback (when DB is empty or unavailable)
+  if (type === 'definitions' || !type) {
+    return filterDemoWorkflows({ companyId, entity, page, limit });
+  } else {
+    // For instances fallback, return empty since we don't have demo instances
+    return NextResponse.json({
+      data: [],
+      pagination: { page, limit, total: 0, totalPages: 0 },
+    });
   }
 }
 
 // POST: Create a workflow definition or initiate a workflow instance
 export async function POST(req: NextRequest) {
   try {
+    const { db } = await import('@/lib/db');
     const body = await req.json();
 
     if (body.action === 'create_definition') {
@@ -288,6 +274,7 @@ export async function POST(req: NextRequest) {
 // PATCH: Process a workflow step (approve/reject)
 export async function PATCH(req: NextRequest) {
   try {
+    const { db } = await import('@/lib/db');
     const body = await req.json();
     const { instanceId, action, actionedBy, comments } = body;
 
@@ -398,7 +385,7 @@ export async function PATCH(req: NextRequest) {
 
         // Update the related entity status
         const entity = instance.workflowDef.entity;
-        await updateEntityStatus(entity, instanceId, 'approved');
+        await updateEntityStatus(db, entity, instanceId, 'approved');
       }
     } else {
       // Rejected - mark the instance as rejected
@@ -409,7 +396,7 @@ export async function PATCH(req: NextRequest) {
 
       // Update the related entity status
       const entity = instance.workflowDef.entity;
-      await updateEntityStatus(entity, instanceId, 'rejected');
+      await updateEntityStatus(db, entity, instanceId, 'rejected');
     }
 
     // Notify the initiator
@@ -463,7 +450,8 @@ export async function PATCH(req: NextRequest) {
 }
 
 // Helper function to update entity status based on workflow entity type
-async function updateEntityStatus(entity: string, workflowInstanceId: string, status: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function updateEntityStatus(db: any, entity: string, workflowInstanceId: string, status: string) {
   switch (entity) {
     case 'leave': {
       const leave = await db.leave.findFirst({

@@ -1,14 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import { DEMO_COMPANIES } from '@/lib/demo-data';
 
+function filterDemoCompanies(params: { isActive?: string | null; search?: string | null; page: number; limit: number }) {
+  let filtered = [...DEMO_COMPANIES];
+  if (params.isActive !== null && params.isActive !== undefined) {
+    filtered = filtered.filter(c => c.isActive === (params.isActive === 'true'));
+  }
+  if (params.search) {
+    const q = params.search.toLowerCase();
+    filtered = filtered.filter(c => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || (c.industry || '').toLowerCase().includes(q));
+  }
+  return NextResponse.json({
+    data: filtered,
+    pagination: { page: params.page, limit: params.limit, total: filtered.length, totalPages: Math.ceil(filtered.length / params.limit) },
+  });
+}
+
 export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const isActive = url.searchParams.get('isActive');
+  const search = url.searchParams.get('search');
+  const page = parseInt(url.searchParams.get('page') || '1');
+  const limit = parseInt(url.searchParams.get('limit') || '20');
+
   try {
-    const url = new URL(req.url);
-    const isActive = url.searchParams.get('isActive');
-    const search = url.searchParams.get('search');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const { db } = await import('@/lib/db');
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
@@ -40,52 +56,24 @@ export async function GET(req: NextRequest) {
       db.company.count({ where }),
     ]);
 
-    // If DB returns empty, use demo data fallback
-    if (companies.length === 0 && total === 0) {
-      let filtered = [...DEMO_COMPANIES];
-      if (isActive !== null && isActive !== undefined) {
-        filtered = filtered.filter(c => c.isActive === (isActive === 'true'));
-      }
-      if (search) {
-        const q = search.toLowerCase();
-        filtered = filtered.filter(c => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || (c.industry || '').toLowerCase().includes(q));
-      }
+    // If DB has real data, return it
+    if (companies.length > 0 || total > 0) {
       return NextResponse.json({
-        data: filtered,
-        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+        data: companies,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
       });
     }
-
-    return NextResponse.json({
-      data: companies,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-    });
   } catch (error) {
-    console.error('Companies GET error:', error);
-    // Fallback to DEMO_COMPANIES from demo-data.ts
-    const url = new URL(req.url);
-    const isActive = url.searchParams.get('isActive');
-    const search = url.searchParams.get('search');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
-
-    let filtered = [...DEMO_COMPANIES];
-    if (isActive !== null && isActive !== undefined) {
-      filtered = filtered.filter(c => c.isActive === (isActive === 'true'));
-    }
-    if (search) {
-      const q = search.toLowerCase();
-      filtered = filtered.filter(c => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || (c.industry || '').toLowerCase().includes(q));
-    }
-    return NextResponse.json({
-      data: filtered,
-      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
-    });
+    console.error('Companies GET error, using demo data:', error);
   }
+
+  // Demo data fallback (when DB is empty or unavailable)
+  return filterDemoCompanies({ isActive, search, page, limit });
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const { db } = await import('@/lib/db');
     const body = await req.json();
     const { name, code, industry, logo, domain, country, currency, timezone, isActive, parentId } = body;
 
@@ -138,6 +126,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    const { db } = await import('@/lib/db');
     const body = await req.json();
     const { id, ...updateData } = body;
 
