@@ -116,8 +116,9 @@ export const useAppStore = create<AppState>((set, get) => ({
         companyCurrency: apiCompany?.currency,
       };
       
-      // Use company from API data, or fall back to demo company
-      const company = apiCompany ? {
+      // Use company from API data, or fall back to first demo company
+      // If the API company doesn't have a valid ID, try to find matching company from companies API
+      let company = apiCompany ? {
         id: apiCompany.id,
         name: apiCompany.name,
         code: apiCompany.code || '',
@@ -155,9 +156,18 @@ export const useAppStore = create<AppState>((set, get) => ({
             currency: (c.currency as string) || 'USD',
             employeeCount: (c._count as Record<string, number>)?.employees || 0,
             isActive: (c.isActive as boolean) ?? true,
-          }));
+          })).filter((c: CompanyInfo) => c.id && c.id.trim() !== '');
           if (mappedCompanies.length > 0) {
             set({ companies: mappedCompanies });
+            // Update currentCompany to match a real company from the database
+            const matchingCompany = mappedCompanies.find((c: CompanyInfo) => c.id === company.id);
+            if (!matchingCompany && mappedCompanies.length > 0) {
+              // Try to match by name or code
+              const nameMatch = mappedCompanies.find((c: CompanyInfo) => 
+                c.name === company.name || c.code === company.code
+              );
+              set({ currentCompany: nameMatch || mappedCompanies[0] });
+            }
           }
         }
       } catch {
