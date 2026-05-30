@@ -16,12 +16,12 @@ function createPrismaClient() {
     })
   } catch (error) {
     console.error('Failed to create PrismaClient:', error)
-    return createFallbackProxy()
+    return createErrorProxy()
   }
 }
 
-// Fallback proxy that catches all database calls and returns safe defaults
-function createFallbackProxy(): PrismaClient {
+// Error proxy that throws on any database call so API routes fall back to demo data
+function createErrorProxy(): PrismaClient {
   return new Proxy({} as PrismaClient, {
     get(_target, prop: string) {
       const modelNames = [
@@ -40,18 +40,8 @@ function createFallbackProxy(): PrismaClient {
         return new Proxy({}, {
           get(_t, method: string) {
             return (..._args: unknown[]) => {
-              if (method === 'count') return Promise.resolve(0)
-              if (method === 'findMany') return Promise.resolve([])
-              if (method === 'findUnique') return Promise.resolve(null)
-              if (method === 'findFirst') return Promise.resolve(null)
-              if (method === 'aggregate') return Promise.resolve({ _sum: {} })
-              if (method === 'groupBy') return Promise.resolve([])
-              if (method === 'create') return Promise.resolve({})
-              if (method === 'update') return Promise.resolve({})
-              if (method === 'delete') return Promise.resolve({})
-              if (method === 'deleteMany') return Promise.resolve({ count: 0 })
-              if (method === 'updateMany') return Promise.resolve({ count: 0 })
-              return Promise.resolve(null)
+              // Throw error so API routes catch it and fall back to demo data
+              throw new Error(`Database unavailable: ${prop}.${method} failed - using demo data fallback`)
             }
           }
         })
