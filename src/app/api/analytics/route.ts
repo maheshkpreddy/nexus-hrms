@@ -115,8 +115,8 @@ export async function GET(req: NextRequest) {
       where: { ...companyFilter, status: 'active' },
     });
 
-    // If DB has no employees, use demo data fallback
-    if (totalActiveEmployees === 0) {
+    // If DB has very few employees (likely incomplete), use demo data fallback
+    if (totalActiveEmployees < 5) {
       return NextResponse.json(getDemoAnalyticsData());
     }
 

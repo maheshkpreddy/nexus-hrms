@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DEMO_WORKFLOWS } from '@/lib/demo-data';
+import { DEMO_WORKFLOWS, DEMO_WORKFLOW_INSTANCES } from '@/lib/demo-data';
 
 function filterDemoWorkflows(params: { companyId?: string | null; entity?: string | null; page: number; limit: number }) {
   let filtered = [...DEMO_WORKFLOWS];
@@ -91,10 +91,12 @@ export async function GET(req: NextRequest) {
   if (type === 'definitions' || !type) {
     return filterDemoWorkflows({ companyId, entity, page, limit });
   } else {
-    // For instances fallback, return empty since we don't have demo instances
+    // For instances fallback, return demo instances
+    let filtered = [...DEMO_WORKFLOW_INSTANCES];
+    if (status) filtered = filtered.filter(i => i.status === status);
     return NextResponse.json({
-      data: [],
-      pagination: { page, limit, total: 0, totalPages: 0 },
+      data: filtered,
+      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
     });
   }
 }

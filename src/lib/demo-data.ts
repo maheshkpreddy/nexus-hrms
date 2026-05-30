@@ -285,6 +285,26 @@ export const DEMO_WORKFLOWS = [
   ]},
 ];
 
+// ==================== WORKFLOW INSTANCES ====================
+export const DEMO_WORKFLOW_INSTANCES = [
+  { id: 'wfi-1', status: 'pending', currentStep: 0, initiatedBy: 'emp-tcg-1', workflowDefId: 'wf-1', workflowDef: { id: 'wf-1', name: 'Leave Approval Workflow', entity: 'leave' }, steps: [
+    { id: 'wfi-step-1', stepOrder: 0, status: 'pending', actionedBy: null, comments: null, actedAt: null },
+    { id: 'wfi-step-2', stepOrder: 1, status: 'pending', actionedBy: null, comments: null, actedAt: null },
+  ]},
+  { id: 'wfi-2', status: 'approved', currentStep: 1, initiatedBy: 'emp-tcg-3', workflowDefId: 'wf-1', workflowDef: { id: 'wf-1', name: 'Leave Approval Workflow', entity: 'leave' }, steps: [
+    { id: 'wfi-step-3', stepOrder: 0, status: 'approved', actionedBy: 'emp-tcg-2', comments: 'Approved - valid reason', actedAt: '2025-01-18T10:00:00' },
+    { id: 'wfi-step-4', stepOrder: 1, status: 'approved', actionedBy: 'emp-tcg-2', comments: 'HR approved', actedAt: '2025-01-18T14:00:00' },
+  ]},
+  { id: 'wfi-3', status: 'pending', currentStep: 1, initiatedBy: 'emp-tcg-5', workflowDefId: 'wf-2', workflowDef: { id: 'wf-2', name: 'Expense Claim Approval', entity: 'expense' }, steps: [
+    { id: 'wfi-step-5', stepOrder: 0, status: 'approved', actionedBy: 'emp-tcg-2', comments: 'Receipts verified', actedAt: '2025-01-19T09:00:00' },
+    { id: 'wfi-step-6', stepOrder: 1, status: 'pending', actionedBy: null, comments: null, actedAt: null },
+  ]},
+  { id: 'wfi-4', status: 'rejected', currentStep: 0, initiatedBy: 'emp-mpi-1', workflowDefId: 'wf-2', workflowDef: { id: 'wf-2', name: 'Expense Claim Approval', entity: 'expense' }, steps: [
+    { id: 'wfi-step-7', stepOrder: 0, status: 'rejected', actionedBy: 'emp-tcg-2', comments: 'Insufficient documentation', actedAt: '2025-01-20T11:00:00' },
+    { id: 'wfi-step-8', stepOrder: 1, status: 'pending', actionedBy: null, comments: null, actedAt: null },
+  ]},
+];
+
 // ==================== SURVEYS ====================
 export const DEMO_SURVEYS = [
   { id: 'survey-1', title: 'Q1 2025 Employee Engagement Pulse', description: 'Quick pulse check on employee engagement and satisfaction', type: 'pulse', status: 'active', startDate: '2025-01-15', endDate: '2025-01-31', companyId: 'comp-tcg', questions: [
