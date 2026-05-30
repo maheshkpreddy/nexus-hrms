@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { DEMO_EMPLOYEES } from '@/lib/demo-data';
 
 export async function GET(req: NextRequest) {
   try {
@@ -55,21 +56,17 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Employees GET error:', error);
-    // Demo data fallback when database is unavailable
-    const demoEmployees = [
-      { id: 'demo-1', employeeId: 'EMP001', firstName: 'Rajesh', lastName: 'Kumar', email: 'rajesh.kumar@nexustech.com', phone: '+91-9876543210', designation: 'Senior Developer', jobTitle: 'Senior Developer', employmentType: 'full-time', status: 'active', joiningDate: '2023-01-15', department: { id: 'dept-1', name: 'Engineering' }, branch: { id: 'branch-1', name: 'Hyderabad HQ' }, company: { id: 'comp-1', name: 'Nexus Technologies' }, reportingManager: null },
-      { id: 'demo-2', employeeId: 'EMP002', firstName: 'Priya', lastName: 'Sharma', email: 'priya.sharma@nexustech.com', phone: '+91-9876543211', designation: 'HR Manager', jobTitle: 'HR Manager', employmentType: 'full-time', status: 'active', joiningDate: '2022-06-01', department: { id: 'dept-2', name: 'Human Resources' }, branch: { id: 'branch-1', name: 'Hyderabad HQ' }, company: { id: 'comp-1', name: 'Nexus Technologies' }, reportingManager: null },
-      { id: 'demo-3', employeeId: 'EMP003', firstName: 'Amit', lastName: 'Patel', email: 'amit.patel@nexustech.com', phone: '+91-9876543212', designation: 'Product Designer', jobTitle: 'Product Designer', employmentType: 'full-time', status: 'active', joiningDate: '2023-03-20', department: { id: 'dept-3', name: 'Design' }, branch: { id: 'branch-2', name: 'Bangalore Office' }, company: { id: 'comp-1', name: 'Nexus Technologies' }, reportingManager: { id: 'demo-2', firstName: 'Priya', lastName: 'Sharma' } },
-      { id: 'demo-4', employeeId: 'EMP004', firstName: 'Sneha', lastName: 'Reddy', email: 'sneha.reddy@nexustech.com', phone: '+91-9876543213', designation: 'Finance Analyst', jobTitle: 'Finance Analyst', employmentType: 'full-time', status: 'active', joiningDate: '2022-11-10', department: { id: 'dept-4', name: 'Finance' }, branch: { id: 'branch-1', name: 'Hyderabad HQ' }, company: { id: 'comp-1', name: 'Nexus Technologies' }, reportingManager: { id: 'demo-10', firstName: 'Meera', lastName: 'Joshi' } },
-      { id: 'demo-5', employeeId: 'EMP005', firstName: 'Vikram', lastName: 'Singh', email: 'vikram.singh@nexustech.com', phone: '+91-9876543214', designation: 'DevOps Engineer', jobTitle: 'DevOps Engineer', employmentType: 'contract', status: 'probation', joiningDate: '2024-01-08', department: { id: 'dept-1', name: 'Engineering' }, branch: { id: 'branch-2', name: 'Bangalore Office' }, company: { id: 'comp-1', name: 'Nexus Technologies' }, reportingManager: { id: 'demo-1', firstName: 'Rajesh', lastName: 'Kumar' } },
-      { id: 'demo-6', employeeId: 'EMP006', firstName: 'Ananya', lastName: 'Gupta', email: 'ananya.gupta@nexustech.com', phone: '+91-9876543215', designation: 'Marketing Lead', jobTitle: 'Marketing Lead', employmentType: 'full-time', status: 'active', joiningDate: '2023-07-15', department: { id: 'dept-5', name: 'Marketing' }, branch: { id: 'branch-1', name: 'Hyderabad HQ' }, company: { id: 'comp-1', name: 'Nexus Technologies' }, reportingManager: null },
-      { id: 'demo-7', employeeId: 'EMP007', firstName: 'Kiran', lastName: 'Nair', email: 'kiran.nair@nexustech.com', phone: '+91-9876543216', designation: 'QA Engineer', jobTitle: 'QA Engineer', employmentType: 'full-time', status: 'on_leave', joiningDate: '2022-09-20', department: { id: 'dept-1', name: 'Engineering' }, branch: { id: 'branch-1', name: 'Hyderabad HQ' }, company: { id: 'comp-1', name: 'Nexus Technologies' }, reportingManager: { id: 'demo-1', firstName: 'Rajesh', lastName: 'Kumar' } },
-      { id: 'demo-8', employeeId: 'EMP008', firstName: 'Deepa', lastName: 'Iyer', email: 'deepa.iyer@nexustech.com', phone: '+91-9876543217', designation: 'Sales Executive', jobTitle: 'Sales Executive', employmentType: 'full-time', status: 'active', joiningDate: '2023-11-01', department: { id: 'dept-6', name: 'Sales' }, branch: { id: 'branch-2', name: 'Bangalore Office' }, company: { id: 'comp-1', name: 'Nexus Technologies' }, reportingManager: { id: 'demo-9', firstName: 'Arjun', lastName: 'Menon' } },
-      { id: 'demo-9', employeeId: 'EMP009', firstName: 'Arjun', lastName: 'Menon', email: 'arjun.menon@nexustech.com', phone: '+91-9876543218', designation: 'Operations Manager', jobTitle: 'Operations Manager', employmentType: 'full-time', status: 'active', joiningDate: '2022-04-15', department: { id: 'dept-7', name: 'Operations' }, branch: { id: 'branch-3', name: 'Mumbai Office' }, company: { id: 'comp-1', name: 'Nexus Technologies' }, reportingManager: null },
-      { id: 'demo-10', employeeId: 'EMP010', firstName: 'Meera', lastName: 'Joshi', email: 'meera.joshi@nexustech.com', phone: '+91-9876543219', designation: 'Senior Accountant', jobTitle: 'Senior Accountant', employmentType: 'full-time', status: 'active', joiningDate: '2022-08-22', department: { id: 'dept-4', name: 'Finance' }, branch: { id: 'branch-3', name: 'Mumbai Office' }, company: { id: 'comp-1', name: 'Nexus Technologies' }, reportingManager: null },
-    ];
-    // Apply search filter to demo data
-    let filtered = demoEmployees;
+    // Fallback to DEMO_EMPLOYEES from demo-data.ts
+    const url = new URL(req.url);
+    const search = url.searchParams.get('search');
+    const departmentId = url.searchParams.get('departmentId');
+    const status = url.searchParams.get('status');
+    const companyId = url.searchParams.get('companyId');
+    const branchId = url.searchParams.get('branchId');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+
+    let filtered = [...DEMO_EMPLOYEES];
     if (search) {
       const q = search.toLowerCase();
       filtered = filtered.filter(e => e.firstName.toLowerCase().includes(q) || e.lastName.toLowerCase().includes(q) || e.email.toLowerCase().includes(q) || e.designation.toLowerCase().includes(q));
@@ -80,7 +77,7 @@ export async function GET(req: NextRequest) {
     if (branchId) filtered = filtered.filter(e => e.branch?.id === branchId);
     return NextResponse.json({
       data: filtered,
-      pagination: { page, limit, total: filtered.length, totalPages: 1 },
+      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
     });
   }
 }

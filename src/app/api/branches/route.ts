@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { DEMO_BRANCHES } from '@/lib/demo-data';
 
 export async function GET(req: NextRequest) {
   try {
@@ -35,16 +36,18 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Branches GET error:', error);
-    // Demo data fallback when database is unavailable
-    const demoBranches = [
-      { id: 'branch-1', name: 'Hyderabad HQ', code: 'HYD', city: 'Hyderabad', country: 'India', isActive: true, companyId: companyId || 'comp-1' },
-      { id: 'branch-2', name: 'Bangalore Office', code: 'BLR', city: 'Bangalore', country: 'India', isActive: true, companyId: companyId || 'comp-1' },
-      { id: 'branch-3', name: 'Mumbai Office', code: 'MUM', city: 'Mumbai', country: 'India', isActive: true, companyId: companyId || 'comp-1' },
-    ];
+    // Fallback to DEMO_BRANCHES from demo-data.ts
+    const url = new URL(req.url);
+    const companyId = url.searchParams.get('companyId');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '100');
+
+    let filtered = [...DEMO_BRANCHES];
+    if (companyId) filtered = filtered.filter(b => b.companyId === companyId);
 
     return NextResponse.json({
-      data: demoBranches,
-      pagination: { page: 1, limit: 100, total: demoBranches.length, totalPages: 1 },
+      data: filtered,
+      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
     });
   }
 }

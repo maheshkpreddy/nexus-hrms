@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { DEMO_SHIFTS } from '@/lib/demo-data';
 
 export async function GET(req: NextRequest) {
   try {
@@ -47,76 +48,18 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Shifts GET error:', error);
-    // Demo data fallback when database is unavailable
+    // Fallback to DEMO_SHIFTS from demo-data.ts
     const url = new URL(req.url);
     const companyId = url.searchParams.get('companyId');
     const isActiveParam = url.searchParams.get('isActive');
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
 
-    const demoShifts = [
-      {
-        id: 'shift-1', name: 'Morning Shift', startTime: '06:00', endTime: '14:00',
-        breakMinutes: 30, isActive: true, companyId: companyId || 'comp-1',
-        createdAt: new Date('2025-01-01'), updatedAt: new Date('2025-01-01'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-        members: [
-          { id: 'sm-1', employeeId: 'demo-1', effectiveDate: new Date('2025-01-01'),
-            employee: { id: 'demo-1', firstName: 'Rajesh', lastName: 'Kumar', employeeId: 'EMP001', department: { name: 'Engineering' } } },
-          { id: 'sm-2', employeeId: 'demo-7', effectiveDate: new Date('2025-01-01'),
-            employee: { id: 'demo-7', firstName: 'Kiran', lastName: 'Nair', employeeId: 'EMP007', department: { name: 'Engineering' } } },
-        ],
-        _count: { members: 2 },
-      },
-      {
-        id: 'shift-2', name: 'General Shift', startTime: '09:00', endTime: '18:00',
-        breakMinutes: 60, isActive: true, companyId: companyId || 'comp-1',
-        createdAt: new Date('2025-01-01'), updatedAt: new Date('2025-01-01'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-        members: [
-          { id: 'sm-3', employeeId: 'demo-2', effectiveDate: new Date('2025-01-01'),
-            employee: { id: 'demo-2', firstName: 'Priya', lastName: 'Sharma', employeeId: 'EMP002', department: { name: 'Human Resources' } } },
-          { id: 'sm-4', employeeId: 'demo-4', effectiveDate: new Date('2025-01-01'),
-            employee: { id: 'demo-4', firstName: 'Sneha', lastName: 'Reddy', employeeId: 'EMP004', department: { name: 'Finance' } } },
-          { id: 'sm-5', employeeId: 'demo-6', effectiveDate: new Date('2025-01-01'),
-            employee: { id: 'demo-6', firstName: 'Ananya', lastName: 'Gupta', employeeId: 'EMP006', department: { name: 'Marketing' } } },
-          { id: 'sm-6', employeeId: 'demo-9', effectiveDate: new Date('2025-01-01'),
-            employee: { id: 'demo-9', firstName: 'Arjun', lastName: 'Menon', employeeId: 'EMP009', department: { name: 'Operations' } } },
-          { id: 'sm-7', employeeId: 'demo-10', effectiveDate: new Date('2025-01-01'),
-            employee: { id: 'demo-10', firstName: 'Meera', lastName: 'Joshi', employeeId: 'EMP010', department: { name: 'Finance' } } },
-        ],
-        _count: { members: 5 },
-      },
-      {
-        id: 'shift-3', name: 'Afternoon Shift', startTime: '14:00', endTime: '22:00',
-        breakMinutes: 30, isActive: true, companyId: companyId || 'comp-1',
-        createdAt: new Date('2025-01-01'), updatedAt: new Date('2025-01-01'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-        members: [
-          { id: 'sm-8', employeeId: 'demo-3', effectiveDate: new Date('2025-01-01'),
-            employee: { id: 'demo-3', firstName: 'Amit', lastName: 'Patel', employeeId: 'EMP003', department: { name: 'Design' } } },
-          { id: 'sm-9', employeeId: 'demo-8', effectiveDate: new Date('2025-01-01'),
-            employee: { id: 'demo-8', firstName: 'Deepa', lastName: 'Iyer', employeeId: 'EMP008', department: { name: 'Sales' } } },
-        ],
-        _count: { members: 2 },
-      },
-      {
-        id: 'shift-4', name: 'Night Shift', startTime: '22:00', endTime: '06:00',
-        breakMinutes: 45, isActive: true, companyId: companyId || 'comp-1',
-        createdAt: new Date('2025-01-01'), updatedAt: new Date('2025-01-01'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-        members: [
-          { id: 'sm-10', employeeId: 'demo-5', effectiveDate: new Date('2025-01-08'),
-            employee: { id: 'demo-5', firstName: 'Vikram', lastName: 'Singh', employeeId: 'EMP005', department: { name: 'Engineering' } } },
-        ],
-        _count: { members: 1 },
-      },
-    ];
-
-    let filtered = demoShifts;
+    let filtered = [...DEMO_SHIFTS];
+    if (companyId) filtered = filtered.filter(s => s.companyId === companyId);
     if (isActiveParam !== null && isActiveParam !== undefined) {
       const active = isActiveParam === 'true';
-      filtered = filtered.filter((s) => s.isActive === active);
+      filtered = filtered.filter(s => s.isActive === active);
     }
 
     return NextResponse.json({

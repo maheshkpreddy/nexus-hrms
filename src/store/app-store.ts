@@ -55,9 +55,11 @@ interface AppState {
 }
 
 const DEMO_COMPANIES: CompanyInfo[] = [
-  { id: 'comp-1', name: 'Nexus Technologies', code: 'NEXUS', industry: 'IT Services', country: 'IN', currency: 'INR', employeeCount: 10, isActive: true },
-  { id: 'comp-2', name: 'ManufactPro Industries', code: 'MPI', industry: 'Manufacturing', country: 'IN', currency: 'INR', employeeCount: 5800, isActive: true },
-  { id: 'comp-3', name: 'HealthFirst Solutions', code: 'HFS', industry: 'Healthcare', country: 'GB', currency: 'GBP', employeeCount: 1200, isActive: true },
+  { id: 'comp-tcg', name: 'TechCorp Global', code: 'TCG', industry: 'IT Services', country: 'US', currency: 'USD', employeeCount: 12, isActive: true },
+  { id: 'comp-mpi', name: 'ManufactPro Industries', code: 'MPI', industry: 'Manufacturing', country: 'IN', currency: 'INR', employeeCount: 8, isActive: true },
+  { id: 'comp-hfs', name: 'HealthFirst Solutions', code: 'HFS', industry: 'Healthcare', country: 'GB', currency: 'GBP', employeeCount: 6, isActive: true },
+  { id: 'comp-rmg', name: 'RetailMax Group', code: 'RMG', industry: 'Retail', country: 'DE', currency: 'EUR', employeeCount: 5, isActive: true },
+  { id: 'comp-ltw', name: 'LogiTrans Worldwide', code: 'LTW', industry: 'Logistics', country: 'SG', currency: 'SGD', employeeCount: 4, isActive: true },
 ];
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -137,6 +139,30 @@ export const useAppStore = create<AppState>((set, get) => ({
         currentCompany: company,
         activeModule: 'dashboard',
       });
+
+      // Fetch companies list after login for the company switcher
+      try {
+        const companiesRes = await fetch('/api/companies');
+        if (companiesRes.ok) {
+          const companiesData = await companiesRes.json();
+          const apiCompanies = Array.isArray(companiesData) ? companiesData : (companiesData.data || []);
+          const mappedCompanies: CompanyInfo[] = apiCompanies.map((c: Record<string, unknown>) => ({
+            id: (c.id as string) || '',
+            name: (c.name as string) || '',
+            code: (c.code as string) || '',
+            industry: (c.industry as string) || '',
+            country: (c.country as string) || '',
+            currency: (c.currency as string) || 'USD',
+            employeeCount: (c._count as Record<string, number>)?.employees || 0,
+            isActive: (c.isActive as boolean) ?? true,
+          }));
+          if (mappedCompanies.length > 0) {
+            set({ companies: mappedCompanies });
+          }
+        }
+      } catch {
+        // Silently fail - use default companies
+      }
     } catch {
       set({ isLoading: false, authError: 'Network error. Please try again.' });
     }

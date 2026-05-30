@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { DEMO_EXPENSES } from '@/lib/demo-data';
 
 export async function GET(req: NextRequest) {
   try {
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Expenses GET error:', error);
-    // Demo data fallback when database is unavailable
+    // Fallback to DEMO_EXPENSES from demo-data.ts
     const url = new URL(req.url);
     const status = url.searchParams.get('status');
     const employeeId = url.searchParams.get('employeeId');
@@ -60,65 +61,10 @@ export async function GET(req: NextRequest) {
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
 
-    const demoClaims = [
-      {
-        id: 'exp-1', type: 'travel', amount: 12500.00, description: 'Flight to Mumbai for client meeting',
-        receipt: 'receipt1.pdf', status: 'pending', employeeId: 'demo-1',
-        approverId: null, approverComment: null, workflowInstanceId: null,
-        createdAt: new Date('2025-02-20'), updatedAt: new Date('2025-02-20'),
-        employee: { id: 'demo-1', firstName: 'Rajesh', lastName: 'Kumar', employeeId: 'EMP001', avatar: null, department: { name: 'Engineering' } },
-        approver: null, workflowInstance: null,
-      },
-      {
-        id: 'exp-2', type: 'meals', amount: 8500.50, description: 'Team lunch meeting with client',
-        receipt: 'receipt2.pdf', status: 'approved', employeeId: 'demo-8',
-        approverId: 'demo-9', approverComment: 'Approved - client meeting', workflowInstanceId: null,
-        createdAt: new Date('2025-02-15'), updatedAt: new Date('2025-02-18'),
-        employee: { id: 'demo-8', firstName: 'Deepa', lastName: 'Iyer', employeeId: 'EMP008', avatar: null, department: { name: 'Sales' } },
-        approver: { id: 'demo-9', firstName: 'Arjun', lastName: 'Menon' },
-        workflowInstance: null,
-      },
-      {
-        id: 'exp-3', type: 'equipment', amount: 24999.99, description: 'New development laptop',
-        receipt: 'receipt3.pdf', status: 'rejected', employeeId: 'demo-1',
-        approverId: 'demo-10', approverComment: 'Budget exceeded for Q1', workflowInstanceId: null,
-        createdAt: new Date('2025-02-10'), updatedAt: new Date('2025-02-14'),
-        employee: { id: 'demo-1', firstName: 'Rajesh', lastName: 'Kumar', employeeId: 'EMP001', avatar: null, department: { name: 'Engineering' } },
-        approver: { id: 'demo-10', firstName: 'Meera', lastName: 'Joshi' },
-        workflowInstance: null,
-      },
-      {
-        id: 'exp-4', type: 'travel', amount: 5600.00, description: 'Hotel stay for conference',
-        receipt: 'receipt4.pdf', status: 'pending', employeeId: 'demo-6',
-        approverId: null, approverComment: null, workflowInstanceId: null,
-        createdAt: new Date('2025-02-25'), updatedAt: new Date('2025-02-25'),
-        employee: { id: 'demo-6', firstName: 'Ananya', lastName: 'Gupta', employeeId: 'EMP006', avatar: null, department: { name: 'Marketing' } },
-        approver: null, workflowInstance: null,
-      },
-      {
-        id: 'exp-5', type: 'office_supplies', amount: 3200.00, description: 'Office stationery and printer cartridges',
-        receipt: 'receipt5.pdf', status: 'approved', employeeId: 'demo-4',
-        approverId: 'demo-10', approverComment: 'Approved', workflowInstanceId: null,
-        createdAt: new Date('2025-02-08'), updatedAt: new Date('2025-02-10'),
-        employee: { id: 'demo-4', firstName: 'Sneha', lastName: 'Reddy', employeeId: 'EMP004', avatar: null, department: { name: 'Finance' } },
-        approver: { id: 'demo-10', firstName: 'Meera', lastName: 'Joshi' },
-        workflowInstance: null,
-      },
-      {
-        id: 'exp-6', type: 'internet', amount: 1500.00, description: 'Monthly internet reimbursement',
-        receipt: 'receipt6.pdf', status: 'approved', employeeId: 'demo-5',
-        approverId: 'demo-2', approverComment: 'Approved - work from home', workflowInstanceId: null,
-        createdAt: new Date('2025-03-01'), updatedAt: new Date('2025-03-03'),
-        employee: { id: 'demo-5', firstName: 'Vikram', lastName: 'Singh', employeeId: 'EMP005', avatar: null, department: { name: 'Engineering' } },
-        approver: { id: 'demo-2', firstName: 'Priya', lastName: 'Sharma' },
-        workflowInstance: null,
-      },
-    ];
-
-    let filtered = demoClaims;
-    if (status) filtered = filtered.filter((c) => c.status === status);
-    if (employeeId) filtered = filtered.filter((c) => c.employeeId === employeeId);
-    if (type) filtered = filtered.filter((c) => c.type === type);
+    let filtered = [...DEMO_EXPENSES];
+    if (status) filtered = filtered.filter(c => c.status === status);
+    if (employeeId) filtered = filtered.filter(c => c.employeeId === employeeId);
+    if (type) filtered = filtered.filter(c => c.type === type);
 
     return NextResponse.json({
       data: filtered,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { DEMO_CLIENTS } from '@/lib/demo-data';
 
 export async function GET(req: NextRequest) {
   try {
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Clients GET error:', error);
-    // Demo data fallback when database is unavailable
+    // Fallback to DEMO_CLIENTS from demo-data.ts
     const url = new URL(req.url);
     const status = url.searchParams.get('status');
     const companyId = url.searchParams.get('companyId');
@@ -50,62 +51,12 @@ export async function GET(req: NextRequest) {
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
 
-    const demoClients = [
-      {
-        id: 'cl-1', name: 'Acme Corp', email: 'contact@acme.in', phone: '+91-11-2345-6789',
-        clientCompany: 'Acme Corporation India', industry: 'Technology',
-        contractStart: new Date('2024-01-01'), contractEnd: new Date('2025-12-31'),
-        status: 'active', companyId: companyId || 'comp-1',
-        createdAt: new Date('2024-01-01'), updatedAt: new Date('2025-01-15'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-      },
-      {
-        id: 'cl-2', name: 'GlobalTech Industries', email: 'info@globaltech.in', phone: '+91-22-3456-7890',
-        clientCompany: 'GlobalTech Industries India', industry: 'Manufacturing',
-        contractStart: new Date('2024-06-01'), contractEnd: new Date('2025-05-31'),
-        status: 'active', companyId: companyId || 'comp-1',
-        createdAt: new Date('2024-06-01'), updatedAt: new Date('2024-12-10'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-      },
-      {
-        id: 'cl-3', name: 'Pinnacle Financial', email: 'hello@pinnacle.in', phone: '+91-80-4567-8901',
-        clientCompany: 'Pinnacle Financial Group', industry: 'Finance',
-        contractStart: new Date('2023-03-15'), contractEnd: new Date('2024-03-14'),
-        status: 'expired', companyId: companyId || 'comp-1',
-        createdAt: new Date('2023-03-15'), updatedAt: new Date('2024-03-15'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-      },
-      {
-        id: 'cl-4', name: 'MediCare Solutions', email: 'partners@medicare.in', phone: '+91-40-5678-9012',
-        clientCompany: 'MediCare Solutions India', industry: 'Healthcare',
-        contractStart: new Date('2025-01-01'), contractEnd: new Date('2026-12-31'),
-        status: 'active', companyId: companyId || 'comp-1',
-        createdAt: new Date('2025-01-01'), updatedAt: new Date('2025-01-01'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-      },
-      {
-        id: 'cl-5', name: 'RetailMax India', email: 'b2b@retailmax.in', phone: '+91-80-6789-0123',
-        clientCompany: 'RetailMax India Pvt Ltd', industry: 'Retail',
-        contractStart: new Date('2024-09-01'), contractEnd: new Date('2025-08-31'),
-        status: 'active', companyId: companyId || 'comp-1',
-        createdAt: new Date('2024-09-01'), updatedAt: new Date('2024-09-01'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-      },
-      {
-        id: 'cl-6', name: 'EduSpark Learning', email: 'tech@eduspark.in', phone: '+91-11-7890-1234',
-        clientCompany: 'EduSpark Learning Pvt Ltd', industry: 'Education',
-        contractStart: new Date('2025-02-01'), contractEnd: new Date('2026-01-31'),
-        status: 'active', companyId: companyId || 'comp-1',
-        createdAt: new Date('2025-02-01'), updatedAt: new Date('2025-02-01'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-      },
-    ];
-
-    let filtered = demoClients;
-    if (status) filtered = filtered.filter((c) => c.status === status);
+    let filtered = [...DEMO_CLIENTS];
+    if (status) filtered = filtered.filter(c => c.status === status);
+    if (companyId) filtered = filtered.filter(c => c.companyId === companyId);
     if (search) {
       const s = search.toLowerCase();
-      filtered = filtered.filter((c) =>
+      filtered = filtered.filter(c =>
         c.name.toLowerCase().includes(s) ||
         c.email.toLowerCase().includes(s) ||
         c.clientCompany.toLowerCase().includes(s) ||

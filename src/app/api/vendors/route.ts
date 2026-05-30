@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { DEMO_VENDORS } from '@/lib/demo-data';
 
 export async function GET(req: NextRequest) {
   try {
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Vendors GET error:', error);
-    // Demo data fallback when database is unavailable
+    // Fallback to DEMO_VENDORS from demo-data.ts
     const url = new URL(req.url);
     const status = url.searchParams.get('status');
     const companyId = url.searchParams.get('companyId');
@@ -51,56 +52,12 @@ export async function GET(req: NextRequest) {
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
 
-    const demoVendors = [
-      {
-        id: 'vnd-1', name: 'CloudTech Solutions', email: 'contact@cloudtech.in', phone: '+91-80-4567-8901',
-        vendorCompany: 'CloudTech Solutions Pvt Ltd', serviceType: 'cloud_infrastructure', status: 'active', rating: 4.5,
-        companyId: companyId || 'comp-1', createdAt: new Date('2024-06-15'), updatedAt: new Date('2024-06-15'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-        subVendors: [],
-      },
-      {
-        id: 'vnd-2', name: 'SecureGuard India', email: 'info@secureguard.in', phone: '+91-22-2345-6789',
-        vendorCompany: 'SecureGuard India Ltd', serviceType: 'security', status: 'active', rating: 4.2,
-        companyId: companyId || 'comp-1', createdAt: new Date('2024-08-01'), updatedAt: new Date('2024-08-01'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-        subVendors: [{ id: 'sv-1', name: 'SecureGuard West', email: 'west@secureguard.in', phone: '+91-20-3456-7890', company: 'SecureGuard India Ltd', status: 'active', vendorId: 'vnd-2' }],
-      },
-      {
-        id: 'vnd-3', name: 'CleanSpace Services', email: 'hello@cleanspace.in', phone: '+91-80-5678-9012',
-        vendorCompany: 'CleanSpace Services Pvt Ltd', serviceType: 'facilities', status: 'inactive', rating: 3.8,
-        companyId: companyId || 'comp-1', createdAt: new Date('2024-03-01'), updatedAt: new Date('2025-01-20'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-        subVendors: [],
-      },
-      {
-        id: 'vnd-4', name: 'DataVault Analytics', email: 'sales@datavault.in', phone: '+91-80-6789-0123',
-        vendorCompany: 'DataVault Analytics Pvt Ltd', serviceType: 'data_analytics', status: 'active', rating: 4.7,
-        companyId: companyId || 'comp-1', createdAt: new Date('2025-01-10'), updatedAt: new Date('2025-01-10'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-        subVendors: [],
-      },
-      {
-        id: 'vnd-5', name: 'TechPrint Solutions', email: 'orders@techprint.in', phone: '+91-22-7890-1234',
-        vendorCompany: 'TechPrint Solutions Pvt Ltd', serviceType: 'printing', status: 'active', rating: 4.0,
-        companyId: companyId || 'comp-1', createdAt: new Date('2024-09-15'), updatedAt: new Date('2024-09-15'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-        subVendors: [],
-      },
-      {
-        id: 'vnd-6', name: 'QuickFix IT Services', email: 'support@quickfix.in', phone: '+91-40-8901-2345',
-        vendorCompany: 'QuickFix IT Services Pvt Ltd', serviceType: 'it_support', status: 'active', rating: 3.9,
-        companyId: companyId || 'comp-1', createdAt: new Date('2024-11-01'), updatedAt: new Date('2024-11-01'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-        subVendors: [],
-      },
-    ];
-
-    let filtered = demoVendors;
-    if (status) filtered = filtered.filter((v) => v.status === status);
+    let filtered = [...DEMO_VENDORS];
+    if (status) filtered = filtered.filter(v => v.status === status);
+    if (companyId) filtered = filtered.filter(v => v.companyId === companyId);
     if (search) {
       const s = search.toLowerCase();
-      filtered = filtered.filter((v) =>
+      filtered = filtered.filter(v =>
         v.name.toLowerCase().includes(s) ||
         v.email.toLowerCase().includes(s) ||
         v.vendorCompany.toLowerCase().includes(s) ||

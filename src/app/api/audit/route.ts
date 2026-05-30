@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { DEMO_AUDIT_LOGS } from '@/lib/demo-data';
 
 export async function GET(req: NextRequest) {
   try {
@@ -64,7 +65,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Audit GET error:', error);
-    // Demo data fallback when database is unavailable
+    // Fallback to DEMO_AUDIT_LOGS from demo-data.ts
     const url = new URL(req.url);
     const userId = url.searchParams.get('userId');
     const action = url.searchParams.get('action');
@@ -72,55 +73,10 @@ export async function GET(req: NextRequest) {
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
 
-    const demoLogs = [
-      {
-        id: 'al-1', action: 'CREATE', entity: 'Leave', entityId: 'leave-1',
-        details: 'Leave request submitted: casual for May 20-21', userId: 'demo-user-1', ipAddress: '192.168.1.100',
-        createdAt: new Date('2025-02-25T10:00:00Z'), updatedAt: new Date('2025-02-25T10:00:00Z'),
-        user: { id: 'demo-user-1', name: 'Rajesh Kumar', email: 'rajesh.kumar@nexustech.com', avatar: null },
-      },
-      {
-        id: 'al-2', action: 'APPROVE', entity: 'ExpenseClaim', entityId: 'exp-2',
-        details: 'Expense claim approved: ₹8,500', userId: 'demo-user-9', ipAddress: '192.168.1.101',
-        createdAt: new Date('2025-02-24T14:30:00Z'), updatedAt: new Date('2025-02-24T14:30:00Z'),
-        user: { id: 'demo-user-9', name: 'Arjun Menon', email: 'arjun.menon@nexustech.com', avatar: null },
-      },
-      {
-        id: 'al-3', action: 'UPDATE', entity: 'Employee', entityId: 'demo-5',
-        details: 'Employee profile updated: Vikram Singh', userId: 'demo-user-5', ipAddress: '192.168.1.102',
-        createdAt: new Date('2025-02-20T09:15:00Z'), updatedAt: new Date('2025-02-20T09:15:00Z'),
-        user: { id: 'demo-user-5', name: 'Vikram Singh', email: 'vikram.singh@nexustech.com', avatar: null },
-      },
-      {
-        id: 'al-4', action: 'REJECT', entity: 'TravelRequest', entityId: 'tr-3',
-        details: 'Travel request rejected: Budget constraints for international travel', userId: 'demo-user-10', ipAddress: '192.168.1.103',
-        createdAt: new Date('2025-02-18T16:45:00Z'), updatedAt: new Date('2025-02-18T16:45:00Z'),
-        user: { id: 'demo-user-10', name: 'Meera Joshi', email: 'meera.joshi@nexustech.com', avatar: null },
-      },
-      {
-        id: 'al-5', action: 'CREATE', entity: 'Ticket', entityId: 'tkt-1',
-        details: 'Ticket created: VPN Connection Issues', userId: 'demo-user-1', ipAddress: '192.168.1.100',
-        createdAt: new Date('2025-02-15T11:00:00Z'), updatedAt: new Date('2025-02-15T11:00:00Z'),
-        user: { id: 'demo-user-1', name: 'Rajesh Kumar', email: 'rajesh.kumar@nexustech.com', avatar: null },
-      },
-      {
-        id: 'al-6', action: 'CREATE', entity: 'Employee', entityId: 'demo-5',
-        details: 'New employee onboarded: Vikram Singh - DevOps Engineer', userId: 'demo-user-2', ipAddress: '192.168.1.101',
-        createdAt: new Date('2025-01-08T10:00:00Z'), updatedAt: new Date('2025-01-08T10:00:00Z'),
-        user: { id: 'demo-user-2', name: 'Priya Sharma', email: 'priya.sharma@nexustech.com', avatar: null },
-      },
-      {
-        id: 'al-7', action: 'UPDATE', entity: 'PayrollRecord', entityId: 'pay-1',
-        details: 'Payroll status updated to paid for Rajesh Kumar', userId: 'demo-user-10', ipAddress: '192.168.1.103',
-        createdAt: new Date('2025-02-01T06:00:00Z'), updatedAt: new Date('2025-02-01T06:00:00Z'),
-        user: { id: 'demo-user-10', name: 'Meera Joshi', email: 'meera.joshi@nexustech.com', avatar: null },
-      },
-    ];
-
-    let filtered = demoLogs;
-    if (userId) filtered = filtered.filter((l) => l.userId === userId);
-    if (action) filtered = filtered.filter((l) => l.action === action);
-    if (entity) filtered = filtered.filter((l) => l.entity === entity);
+    let filtered = [...DEMO_AUDIT_LOGS];
+    if (userId) filtered = filtered.filter(l => l.userId === userId);
+    if (action) filtered = filtered.filter(l => l.action === action);
+    if (entity) filtered = filtered.filter(l => l.entity === entity);
 
     // Build summary from filtered data
     const byAction: Record<string, number> = {};

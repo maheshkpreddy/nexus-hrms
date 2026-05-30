@@ -1,39 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// Demo data fallback when database is unavailable
-function getDemoDashboardData() {
-  return {
-    stats: {
-      totalEmployees: 10,
-      newHires: 2,
-      openPositions: 3,
-      attendanceRate: 94,
-      pendingApprovals: 5,
-      unreadNotifications: 3,
-    },
-    recentActivities: [
-      { id: '1', action: 'LOGIN', entity: 'User', details: 'Rajesh Kumar logged in', createdAt: new Date().toISOString(), user: { name: 'Rajesh Kumar', email: 'rajesh.kumar@nexustech.com', avatar: null } },
-      { id: '2', action: 'CREATE', entity: 'Leave', details: 'Ananya Gupta requested casual leave', createdAt: new Date(Date.now() - 3600000).toISOString(), user: { name: 'Priya Sharma', email: 'priya.sharma@nexustech.com', avatar: null } },
-      { id: '3', action: 'APPROVE', entity: 'ExpenseClaim', details: 'Expense claim approved for ₹8,500', createdAt: new Date(Date.now() - 7200000).toISOString(), user: { name: 'Meera Joshi', email: 'meera.joshi@nexustech.com', avatar: null } },
-      { id: '4', action: 'CREATE', entity: 'Employee', details: 'New employee Vikram Singh onboarded', createdAt: new Date(Date.now() - 86400000).toISOString(), user: { name: 'Priya Sharma', email: 'priya.sharma@nexustech.com', avatar: null } },
-      { id: '5', action: 'UPDATE', entity: 'Attendance', details: 'Check-out recorded for Deepa Iyer', createdAt: new Date(Date.now() - 90000000).toISOString(), user: { name: 'Deepa Iyer', email: 'deepa.iyer@nexustech.com', avatar: null } },
-    ],
-    recentNotifications: [
-      { id: 'notif-1', title: 'Leave Request', message: 'Ananya Gupta requested leave for June 1-5', type: 'leave', category: 'approval', isRead: false, createdAt: new Date(Date.now() - 1800000).toISOString() },
-      { id: 'notif-2', title: 'Expense Claim', message: 'Rajesh Kumar submitted an expense claim of ₹12,500', type: 'expense', category: 'approval', isRead: false, createdAt: new Date(Date.now() - 5400000).toISOString() },
-      { id: 'notif-3', title: 'Attendance Alert', message: 'Amit Patel checked in late today', type: 'attendance', category: 'alert', isRead: true, createdAt: new Date(Date.now() - 7200000).toISOString() },
-    ],
-    departmentStats: [
-      { departmentId: 'dept-1', departmentName: 'Engineering', count: 3 },
-      { departmentId: 'dept-2', departmentName: 'Human Resources', count: 1 },
-      { departmentId: 'dept-3', departmentName: 'Design', count: 1 },
-      { departmentId: 'dept-4', departmentName: 'Finance', count: 2 },
-      { departmentId: 'dept-5', departmentName: 'Marketing', count: 1 },
-      { departmentId: 'dept-6', departmentName: 'Sales', count: 1 },
-      { departmentId: 'dept-7', departmentName: 'Operations', count: 1 },
-    ],
-  };
-}
+import { DEMO_DASHBOARD_STATS } from '@/lib/demo-data';
 
 export async function GET(req: NextRequest) {
   try {
@@ -161,7 +127,32 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Dashboard error - returning demo data:', error);
-    // Return demo data instead of 500 error
-    return NextResponse.json(getDemoDashboardData());
+    // Fallback to DEMO_DASHBOARD_STATS from demo-data.ts
+    const url = new URL(req.url);
+    const companyId = url.searchParams.get('companyId');
+    const stats = DEMO_DASHBOARD_STATS;
+
+    // Filter employees by company if needed
+    const filteredRecentActivities = companyId
+      ? stats.recentActivities
+      : stats.recentActivities;
+
+    return NextResponse.json({
+      stats: {
+        totalEmployees: stats.totalEmployees,
+        activeEmployees: stats.activeEmployees,
+        newHires: stats.newHires,
+        openPositions: stats.openPositions,
+        attritionRate: stats.attritionRate,
+        attendanceRate: stats.attendanceRate,
+        pendingApprovals: stats.pendingApprovals,
+      },
+      recentActivities: filteredRecentActivities,
+      departmentStats: stats.departmentDistribution.map((d) => ({
+        departmentId: d.name.toLowerCase(),
+        departmentName: d.name,
+        count: Math.round(d.value / 50),
+      })),
+    });
   }
 }

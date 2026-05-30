@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { DEMO_ATTENDANCE } from '@/lib/demo-data';
 
 export async function GET(req: NextRequest) {
   try {
@@ -49,25 +50,19 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Attendance GET error:', error);
-    // Demo data fallback when database is unavailable
-    const demoRecords = [
-      { id: 'att-1', employeeId: 'demo-1', date: '2025-05-28', checkIn: '2025-05-28T09:00:00', checkOut: '2025-05-28T18:00:00', status: 'present', workHours: 9, breakDuration: 60, source: 'web', notes: null, employee: { id: 'demo-1', firstName: 'Rajesh', lastName: 'Kumar', employeeId: 'EMP001', department: { name: 'Engineering' } } },
-      { id: 'att-2', employeeId: 'demo-2', date: '2025-05-28', checkIn: '2025-05-28T09:15:00', checkOut: '2025-05-28T17:45:00', status: 'present', workHours: 8.5, breakDuration: 60, source: 'web', notes: null, employee: { id: 'demo-2', firstName: 'Priya', lastName: 'Sharma', employeeId: 'EMP002', department: { name: 'Human Resources' } } },
-      { id: 'att-3', employeeId: 'demo-3', date: '2025-05-28', checkIn: '2025-05-28T10:00:00', checkOut: '2025-05-28T18:30:00', status: 'present', workHours: 8.5, breakDuration: 60, source: 'web', notes: 'Late check-in', employee: { id: 'demo-3', firstName: 'Amit', lastName: 'Patel', employeeId: 'EMP003', department: { name: 'Design' } } },
-      { id: 'att-4', employeeId: 'demo-7', date: '2025-05-28', checkIn: null, checkOut: null, status: 'on_leave', workHours: 0, breakDuration: 0, source: 'system', notes: null, employee: { id: 'demo-7', firstName: 'Kiran', lastName: 'Nair', employeeId: 'EMP007', department: { name: 'Engineering' } } },
-      { id: 'att-5', employeeId: 'demo-4', date: '2025-05-28', checkIn: '2025-05-28T08:45:00', checkOut: '2025-05-28T17:30:00', status: 'present', workHours: 8.75, breakDuration: 60, source: 'web', notes: null, employee: { id: 'demo-4', firstName: 'Sneha', lastName: 'Reddy', employeeId: 'EMP004', department: { name: 'Finance' } } },
-      { id: 'att-6', employeeId: 'demo-6', date: '2025-05-28', checkIn: '2025-05-28T09:00:00', checkOut: '2025-05-28T18:15:00', status: 'present', workHours: 9.25, breakDuration: 60, source: 'web', notes: null, employee: { id: 'demo-6', firstName: 'Ananya', lastName: 'Gupta', employeeId: 'EMP006', department: { name: 'Marketing' } } },
-      { id: 'att-7', employeeId: 'demo-8', date: '2025-05-28', checkIn: '2025-05-28T09:30:00', checkOut: null, status: 'present', workHours: 0, breakDuration: 0, source: 'web', notes: null, employee: { id: 'demo-8', firstName: 'Deepa', lastName: 'Iyer', employeeId: 'EMP008', department: { name: 'Sales' } } },
-      { id: 'att-8', employeeId: 'demo-9', date: '2025-05-28', checkIn: '2025-05-28T08:30:00', checkOut: '2025-05-28T17:30:00', status: 'present', workHours: 9, breakDuration: 60, source: 'web', notes: null, employee: { id: 'demo-9', firstName: 'Arjun', lastName: 'Menon', employeeId: 'EMP009', department: { name: 'Operations' } } },
-      { id: 'att-9', employeeId: 'demo-10', date: '2025-05-28', checkIn: '2025-05-28T09:00:00', checkOut: '2025-05-28T18:00:00', status: 'present', workHours: 9, breakDuration: 60, source: 'web', notes: null, employee: { id: 'demo-10', firstName: 'Meera', lastName: 'Joshi', employeeId: 'EMP010', department: { name: 'Finance' } } },
-      { id: 'att-10', employeeId: 'demo-5', date: '2025-05-27', checkIn: '2025-05-27T10:15:00', checkOut: '2025-05-27T19:00:00', status: 'present', workHours: 8.75, breakDuration: 60, source: 'web', notes: 'Late arrival - probation period', employee: { id: 'demo-5', firstName: 'Vikram', lastName: 'Singh', employeeId: 'EMP005', department: { name: 'Engineering' } } },
-    ];
-    let filtered = demoRecords;
+    // Fallback to DEMO_ATTENDANCE from demo-data.ts
+    const url = new URL(req.url);
+    const employeeId = url.searchParams.get('employeeId');
+    const status = url.searchParams.get('status');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+
+    let filtered = [...DEMO_ATTENDANCE];
     if (employeeId) filtered = filtered.filter(r => r.employeeId === employeeId);
     if (status) filtered = filtered.filter(r => r.status === status);
     return NextResponse.json({
       data: filtered,
-      pagination: { page, limit, total: filtered.length, totalPages: 1 },
+      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
     });
   }
 }

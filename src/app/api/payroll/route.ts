@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { DEMO_PAYROLL } from '@/lib/demo-data';
 
 export async function GET(req: NextRequest) {
   try {
@@ -58,26 +59,28 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Payroll GET error:', error);
-    // Demo data fallback when database is unavailable
-    const demoRecords = [
-      { id: 'pay-1', employeeId: 'demo-1', month: 1, year: 2025, basicPay: 75000, grossSalary: 95000, totalDeductions: 18000, netSalary: 77000, status: 'paid', paymentDate: '2025-02-01', employee: { id: 'demo-1', firstName: 'Rajesh', lastName: 'Kumar', employeeId: 'EMP001', designation: 'Senior Developer', department: { name: 'Engineering' } } },
-      { id: 'pay-2', employeeId: 'demo-2', month: 1, year: 2025, basicPay: 65000, grossSalary: 82000, totalDeductions: 15000, netSalary: 67000, status: 'paid', paymentDate: '2025-02-01', employee: { id: 'demo-2', firstName: 'Priya', lastName: 'Sharma', employeeId: 'EMP002', designation: 'HR Manager', department: { name: 'Human Resources' } } },
-      { id: 'pay-3', employeeId: 'demo-3', month: 1, year: 2025, basicPay: 60000, grossSalary: 78000, totalDeductions: 14000, netSalary: 64000, status: 'paid', paymentDate: '2025-02-01', employee: { id: 'demo-3', firstName: 'Amit', lastName: 'Patel', employeeId: 'EMP003', designation: 'Product Designer', department: { name: 'Design' } } },
-      { id: 'pay-4', employeeId: 'demo-4', month: 1, year: 2025, basicPay: 55000, grossSalary: 70000, totalDeductions: 12000, netSalary: 58000, status: 'paid', paymentDate: '2025-02-01', employee: { id: 'demo-4', firstName: 'Sneha', lastName: 'Reddy', employeeId: 'EMP004', designation: 'Finance Analyst', department: { name: 'Finance' } } },
-      { id: 'pay-5', employeeId: 'demo-5', month: 1, year: 2025, basicPay: 50000, grossSalary: 65000, totalDeductions: 11000, netSalary: 54000, status: 'processed', paymentDate: null, employee: { id: 'demo-5', firstName: 'Vikram', lastName: 'Singh', employeeId: 'EMP005', designation: 'DevOps Engineer', department: { name: 'Engineering' } } },
-      { id: 'pay-6', employeeId: 'demo-6', month: 1, year: 2025, basicPay: 58000, grossSalary: 72000, totalDeductions: 13000, netSalary: 59000, status: 'paid', paymentDate: '2025-02-01', employee: { id: 'demo-6', firstName: 'Ananya', lastName: 'Gupta', employeeId: 'EMP006', designation: 'Marketing Lead', department: { name: 'Marketing' } } },
-      { id: 'pay-7', employeeId: 'demo-7', month: 1, year: 2025, basicPay: 52000, grossSalary: 68000, totalDeductions: 12000, netSalary: 56000, status: 'paid', paymentDate: '2025-02-01', employee: { id: 'demo-7', firstName: 'Kiran', lastName: 'Nair', employeeId: 'EMP007', designation: 'QA Engineer', department: { name: 'Engineering' } } },
-      { id: 'pay-8', employeeId: 'demo-8', month: 1, year: 2025, basicPay: 48000, grossSalary: 62000, totalDeductions: 11000, netSalary: 51000, status: 'processed', paymentDate: null, employee: { id: 'demo-8', firstName: 'Deepa', lastName: 'Iyer', employeeId: 'EMP008', designation: 'Sales Executive', department: { name: 'Sales' } } },
-      { id: 'pay-9', employeeId: 'demo-9', month: 1, year: 2025, basicPay: 62000, grossSalary: 80000, totalDeductions: 14500, netSalary: 65500, status: 'paid', paymentDate: '2025-02-01', employee: { id: 'demo-9', firstName: 'Arjun', lastName: 'Menon', employeeId: 'EMP009', designation: 'Operations Manager', department: { name: 'Operations' } } },
-      { id: 'pay-10', employeeId: 'demo-10', month: 1, year: 2025, basicPay: 56000, grossSalary: 72000, totalDeductions: 13000, netSalary: 59000, status: 'paid', paymentDate: '2025-02-01', employee: { id: 'demo-10', firstName: 'Meera', lastName: 'Joshi', employeeId: 'EMP010', designation: 'Senior Accountant', department: { name: 'Finance' } } },
-    ];
-    const totalGross = demoRecords.reduce((s, r) => s + r.grossSalary, 0);
-    const totalDed = demoRecords.reduce((s, r) => s + r.totalDeductions, 0);
-    const totalNet = demoRecords.reduce((s, r) => s + r.netSalary, 0);
+    // Fallback to DEMO_PAYROLL from demo-data.ts
+    const url = new URL(req.url);
+    const employeeId = url.searchParams.get('employeeId');
+    const month = url.searchParams.get('month');
+    const year = url.searchParams.get('year');
+    const status = url.searchParams.get('status');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+
+    let filtered = [...DEMO_PAYROLL];
+    if (employeeId) filtered = filtered.filter(r => r.employeeId === employeeId);
+    if (month) filtered = filtered.filter(r => r.month === parseInt(month));
+    if (year) filtered = filtered.filter(r => r.year === parseInt(year));
+    if (status) filtered = filtered.filter(r => r.status === status);
+
+    const totalGross = filtered.reduce((s, r) => s + r.grossSalary, 0);
+    const totalDed = filtered.reduce((s, r) => s + r.totalDeductions, 0);
+    const totalNet = filtered.reduce((s, r) => s + r.netSalary, 0);
     return NextResponse.json({
-      data: demoRecords,
-      pagination: { page, limit, total: demoRecords.length, totalPages: 1 },
-      summary: { totalGross, totalDeductions: totalDed, totalNet, recordCount: demoRecords.length },
+      data: filtered,
+      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+      summary: { totalGross, totalDeductions: totalDed, totalNet, recordCount: filtered.length },
     });
   }
 }

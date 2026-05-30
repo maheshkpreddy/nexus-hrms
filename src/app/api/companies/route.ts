@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { DEMO_COMPANIES } from '@/lib/demo-data';
 
 export async function GET(req: NextRequest) {
   try {
@@ -45,13 +46,14 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Companies GET error:', error);
-    // Demo data fallback when database is unavailable
-    const demoCompanies = [
-      { id: 'comp-1', name: 'Nexus Technologies', code: 'NEXUS', industry: 'IT Services', logo: null, domain: 'nexustech.com', country: 'India', currency: 'INR', timezone: 'Asia/Kolkata', isActive: true, parentId: null, createdAt: '2022-01-01T00:00:00.000Z', _count: { employees: 10, departments: 7, branches: 3 }, parent: null },
-      { id: 'comp-2', name: 'GreenLeaf Industries', code: 'GREEN', industry: 'Manufacturing', logo: null, domain: 'greenleaf.com', country: 'India', currency: 'INR', timezone: 'Asia/Kolkata', isActive: true, parentId: null, createdAt: '2024-02-15T00:00:00.000Z', _count: { employees: 5, departments: 4, branches: 2 }, parent: null },
-      { id: 'comp-3', name: 'CloudVenture Labs', code: 'CLOUD', industry: 'IT Services', logo: null, domain: 'cloudventure.io', country: 'USA', currency: 'USD', timezone: 'America/New_York', isActive: true, parentId: 'comp-1', createdAt: '2024-03-10T00:00:00.000Z', _count: { employees: 3, departments: 2, branches: 1 }, parent: { id: 'comp-1', name: 'Nexus Technologies' } },
-    ];
-    let filtered = demoCompanies;
+    // Fallback to DEMO_COMPANIES from demo-data.ts
+    const url = new URL(req.url);
+    const isActive = url.searchParams.get('isActive');
+    const search = url.searchParams.get('search');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+
+    let filtered = [...DEMO_COMPANIES];
     if (isActive !== null && isActive !== undefined) {
       filtered = filtered.filter(c => c.isActive === (isActive === 'true'));
     }
@@ -61,7 +63,7 @@ export async function GET(req: NextRequest) {
     }
     return NextResponse.json({
       data: filtered,
-      pagination: { page, limit, total: filtered.length, totalPages: 1 },
+      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
     });
   }
 }

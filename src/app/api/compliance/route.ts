@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { DEMO_COMPLIANCE } from '@/lib/demo-data';
 
 export async function GET(req: NextRequest) {
   try {
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Compliance GET error:', error);
-    // Demo data fallback when database is unavailable
+    // Fallback to DEMO_COMPLIANCE from demo-data.ts
     const url = new URL(req.url);
     const companyId = url.searchParams.get('companyId');
     const status = url.searchParams.get('status');
@@ -50,49 +51,12 @@ export async function GET(req: NextRequest) {
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
 
-    const demoItems = [
-      {
-        id: 'compliance-1', title: 'Annual Safety Training', description: 'Complete mandatory workplace safety training',
-        category: 'safety', dueDate: new Date('2025-04-01'), status: 'pending', assignee: 'HR Department',
-        companyId: companyId || 'comp-1', createdAt: new Date('2025-01-15'), updatedAt: new Date('2025-01-15'),
-      },
-      {
-        id: 'compliance-2', title: 'Data Privacy Compliance', description: 'Ensure GDPR and data privacy compliance across all systems',
-        category: 'legal', dueDate: new Date('2025-03-15'), status: 'completed', assignee: 'Legal Team',
-        companyId: companyId || 'comp-1', createdAt: new Date('2025-01-10'), updatedAt: new Date('2025-02-20'),
-      },
-      {
-        id: 'compliance-3', title: 'Fire Drill Certification', description: 'Annual fire drill and evacuation certification for all branches',
-        category: 'safety', dueDate: new Date('2025-02-01'), status: 'overdue', assignee: 'Facilities',
-        companyId: companyId || 'comp-1', createdAt: new Date('2025-01-01'), updatedAt: new Date('2025-01-01'),
-      },
-      {
-        id: 'compliance-4', title: 'Financial Audit 2025', description: 'Complete annual financial audit requirements for FY2024-25',
-        category: 'financial', dueDate: new Date('2025-06-30'), status: 'pending', assignee: 'Finance Team',
-        companyId: companyId || 'comp-1', createdAt: new Date('2025-02-01'), updatedAt: new Date('2025-02-01'),
-      },
-      {
-        id: 'compliance-5', title: 'Employee Handbook Update', description: 'Update employee handbook with new policies and benefits',
-        category: 'hr', dueDate: new Date('2025-05-01'), status: 'in_progress', assignee: 'HR Department',
-        companyId: companyId || 'comp-1', createdAt: new Date('2025-02-10'), updatedAt: new Date('2025-02-15'),
-      },
-      {
-        id: 'compliance-6', title: 'ISO 27001 Recertification', description: 'Information security management system recertification audit',
-        category: 'legal', dueDate: new Date('2025-09-30'), status: 'pending', assignee: 'IT Security',
-        companyId: companyId || 'comp-1', createdAt: new Date('2025-03-01'), updatedAt: new Date('2025-03-01'),
-      },
-      {
-        id: 'compliance-7', title: 'Sexual Harassment Prevention Training', description: 'Mandatory POSH training for all employees',
-        category: 'hr', dueDate: new Date('2025-03-31'), status: 'in_progress', assignee: 'HR Department',
-        companyId: companyId || 'comp-1', createdAt: new Date('2025-02-15'), updatedAt: new Date('2025-03-01'),
-      },
-    ];
+    let filtered = [...DEMO_COMPLIANCE];
+    if (companyId) filtered = filtered.filter(i => i.companyId === companyId);
+    if (status) filtered = filtered.filter(i => i.status === status);
+    if (category) filtered = filtered.filter(i => i.category === category);
 
-    let filtered = demoItems;
-    if (status) filtered = filtered.filter((i) => i.status === status);
-    if (category) filtered = filtered.filter((i) => i.category === category);
-
-    const overdueCount = filtered.filter((i) => i.status === 'pending' && i.dueDate < new Date()).length;
+    const overdueCount = filtered.filter(i => i.status === 'pending' && i.dueDate && new Date(i.dueDate) < new Date()).length;
 
     return NextResponse.json({
       data: filtered,

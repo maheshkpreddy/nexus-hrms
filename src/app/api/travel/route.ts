@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { DEMO_TRAVEL } from '@/lib/demo-data';
 
 export async function GET(req: NextRequest) {
   try {
@@ -50,64 +51,16 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Travel GET error:', error);
-    // Demo data fallback when database is unavailable
+    // Fallback to DEMO_TRAVEL from demo-data.ts
     const url = new URL(req.url);
     const status = url.searchParams.get('status');
     const employeeId = url.searchParams.get('employeeId');
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
 
-    const demoRequests = [
-      {
-        id: 'tr-1', purpose: 'Client meeting at Mumbai office', destination: 'Mumbai',
-        departureDate: new Date('2025-03-10'), returnDate: new Date('2025-03-12'),
-        estimatedCost: 25000.00, status: 'pending', employeeId: 'demo-1',
-        approverId: null, approverComment: null, approvedCost: null, workflowInstanceId: null,
-        createdAt: new Date('2025-02-20'), updatedAt: new Date('2025-02-20'),
-        employee: { id: 'demo-1', firstName: 'Rajesh', lastName: 'Kumar', employeeId: 'EMP001', avatar: null, department: { name: 'Engineering' } },
-        approver: null, workflowInstance: null,
-      },
-      {
-        id: 'tr-2', purpose: 'Annual tech conference', destination: 'Bangalore',
-        departureDate: new Date('2025-03-15'), returnDate: new Date('2025-03-18'),
-        estimatedCost: 32000.00, status: 'approved', employeeId: 'demo-8',
-        approverId: 'demo-9', approverComment: 'Approved - aligns with Q1 targets', approvedCost: 32000.00, workflowInstanceId: null,
-        createdAt: new Date('2025-02-10'), updatedAt: new Date('2025-02-15'),
-        employee: { id: 'demo-8', firstName: 'Deepa', lastName: 'Iyer', employeeId: 'EMP008', avatar: null, department: { name: 'Sales' } },
-        approver: { id: 'demo-9', firstName: 'Arjun', lastName: 'Menon' }, workflowInstance: null,
-      },
-      {
-        id: 'tr-3', purpose: 'Partner summit in Singapore', destination: 'Singapore',
-        departureDate: new Date('2025-04-01'), returnDate: new Date('2025-04-05'),
-        estimatedCost: 155000.00, status: 'rejected', employeeId: 'demo-6',
-        approverId: 'demo-10', approverComment: 'Budget constraints for international travel', approvedCost: null, workflowInstanceId: null,
-        createdAt: new Date('2025-02-05'), updatedAt: new Date('2025-02-08'),
-        employee: { id: 'demo-6', firstName: 'Ananya', lastName: 'Gupta', employeeId: 'EMP006', avatar: null, department: { name: 'Marketing' } },
-        approver: { id: 'demo-10', firstName: 'Meera', lastName: 'Joshi' }, workflowInstance: null,
-      },
-      {
-        id: 'tr-4', purpose: 'Team offsite planning session', destination: 'Goa',
-        departureDate: new Date('2025-04-20'), returnDate: new Date('2025-04-22'),
-        estimatedCost: 18000.00, status: 'pending', employeeId: 'demo-2',
-        approverId: null, approverComment: null, approvedCost: null, workflowInstanceId: null,
-        createdAt: new Date('2025-02-25'), updatedAt: new Date('2025-02-25'),
-        employee: { id: 'demo-2', firstName: 'Priya', lastName: 'Sharma', employeeId: 'EMP002', avatar: null, department: { name: 'Human Resources' } },
-        approver: null, workflowInstance: null,
-      },
-      {
-        id: 'tr-5', purpose: 'DataVault Analytics quarterly review', destination: 'Hyderabad',
-        departureDate: new Date('2025-03-25'), returnDate: new Date('2025-03-25'),
-        estimatedCost: 5000.00, status: 'approved', employeeId: 'demo-4',
-        approverId: 'demo-10', approverComment: 'Approved - local travel', approvedCost: 5000.00, workflowInstanceId: null,
-        createdAt: new Date('2025-03-01'), updatedAt: new Date('2025-03-05'),
-        employee: { id: 'demo-4', firstName: 'Sneha', lastName: 'Reddy', employeeId: 'EMP004', avatar: null, department: { name: 'Finance' } },
-        approver: { id: 'demo-10', firstName: 'Meera', lastName: 'Joshi' }, workflowInstance: null,
-      },
-    ];
-
-    let filtered = demoRequests;
-    if (status) filtered = filtered.filter((r) => r.status === status);
-    if (employeeId) filtered = filtered.filter((r) => r.employeeId === employeeId);
+    let filtered = [...DEMO_TRAVEL];
+    if (status) filtered = filtered.filter(r => r.status === status);
+    if (employeeId) filtered = filtered.filter(r => r.employeeId === employeeId);
 
     return NextResponse.json({
       data: filtered,

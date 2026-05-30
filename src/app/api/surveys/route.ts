@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { DEMO_SURVEYS } from '@/lib/demo-data';
 
 export async function GET(req: NextRequest) {
   try {
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Surveys GET error:', error);
-    // Demo data fallback when database is unavailable
+    // Fallback to DEMO_SURVEYS from demo-data.ts
     const url = new URL(req.url);
     const companyId = url.searchParams.get('companyId');
     const status = url.searchParams.get('status');
@@ -50,61 +51,10 @@ export async function GET(req: NextRequest) {
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
 
-    const demoSurveys = [
-      {
-        id: 'survey-1', title: 'Employee Satisfaction Q1', description: 'Quarterly employee satisfaction survey',
-        type: 'pulse', status: 'active', startDate: new Date('2025-02-01'), endDate: new Date('2025-02-28'),
-        companyId: companyId || 'comp-1',
-        createdAt: new Date('2025-01-25'), updatedAt: new Date('2025-02-01'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-        questions: [
-          { id: 'sq-1', question: 'How satisfied are you with your work environment?', type: 'rating', options: null, required: true, order: 0, surveyId: 'survey-1', _count: { responses: 8 } },
-          { id: 'sq-2', question: 'What could we improve?', type: 'text', options: null, required: false, order: 1, surveyId: 'survey-1', _count: { responses: 5 } },
-        ],
-        _count: { questions: 2 },
-      },
-      {
-        id: 'survey-2', title: 'Onboarding Experience', description: 'Feedback from new hires on onboarding process',
-        type: 'onboarding', status: 'draft', startDate: null, endDate: null,
-        companyId: companyId || 'comp-1',
-        createdAt: new Date('2025-02-10'), updatedAt: new Date('2025-02-10'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-        questions: [
-          { id: 'sq-3', question: 'How would you rate the onboarding process?', type: 'rating', options: null, required: true, order: 0, surveyId: 'survey-2', _count: { responses: 0 } },
-          { id: 'sq-4', question: 'What resources were most helpful?', type: 'text', options: null, required: false, order: 1, surveyId: 'survey-2', _count: { responses: 0 } },
-        ],
-        _count: { questions: 2 },
-      },
-      {
-        id: 'survey-3', title: 'Annual Engagement Survey 2024', description: 'Comprehensive annual engagement survey',
-        type: 'annual', status: 'closed', startDate: new Date('2024-11-01'), endDate: new Date('2024-11-30'),
-        companyId: companyId || 'comp-1',
-        createdAt: new Date('2024-10-15'), updatedAt: new Date('2024-12-01'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-        questions: [
-          { id: 'sq-5', question: 'How engaged do you feel at work?', type: 'rating', options: null, required: true, order: 0, surveyId: 'survey-3', _count: { responses: 8 } },
-          { id: 'sq-6', question: 'Would you recommend this company as a workplace?', type: 'rating', options: null, required: true, order: 1, surveyId: 'survey-3', _count: { responses: 8 } },
-          { id: 'sq-7', question: 'Any additional feedback?', type: 'text', options: null, required: false, order: 2, surveyId: 'survey-3', _count: { responses: 3 } },
-        ],
-        _count: { questions: 3 },
-      },
-      {
-        id: 'survey-4', title: 'Remote Work Preferences', description: 'Survey on remote and hybrid work preferences',
-        type: 'pulse', status: 'active', startDate: new Date('2025-03-01'), endDate: new Date('2025-03-15'),
-        companyId: companyId || 'comp-1',
-        createdAt: new Date('2025-02-25'), updatedAt: new Date('2025-03-01'),
-        company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-        questions: [
-          { id: 'sq-8', question: 'How many days per week would you prefer to work from office?', type: 'rating', options: null, required: true, order: 0, surveyId: 'survey-4', _count: { responses: 4 } },
-          { id: 'sq-9', question: 'What challenges do you face while working remotely?', type: 'text', options: null, required: false, order: 1, surveyId: 'survey-4', _count: { responses: 2 } },
-        ],
-        _count: { questions: 2 },
-      },
-    ];
-
-    let filtered = demoSurveys;
-    if (status) filtered = filtered.filter((s) => s.status === status);
-    if (type) filtered = filtered.filter((s) => s.type === type);
+    let filtered = [...DEMO_SURVEYS];
+    if (companyId) filtered = filtered.filter(s => s.companyId === companyId);
+    if (status) filtered = filtered.filter(s => s.status === status);
+    if (type) filtered = filtered.filter(s => s.type === type);
 
     return NextResponse.json({
       data: filtered,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { DEMO_LEAVES } from '@/lib/demo-data';
 
 export async function GET(req: NextRequest) {
   try {
@@ -59,23 +60,21 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Leaves GET error:', error);
-    // Demo data fallback when database is unavailable
-    const demoLeaves = [
-      { id: 'leave-1', type: 'casual', startDate: '2025-05-20', endDate: '2025-05-21', totalDays: 2, reason: 'Personal work', status: 'approved', employeeId: 'demo-1', approverId: 'demo-2', approverComment: 'Approved', createdAt: '2025-05-18', employee: { id: 'demo-1', firstName: 'Rajesh', lastName: 'Kumar', employeeId: 'EMP001', avatar: null, department: { name: 'Engineering' } }, approver: { id: 'demo-2', firstName: 'Priya', lastName: 'Sharma' }, workflowInstance: null },
-      { id: 'leave-2', type: 'sick', startDate: '2025-05-15', endDate: '2025-05-16', totalDays: 2, reason: 'Not feeling well', status: 'approved', employeeId: 'demo-3', approverId: 'demo-2', approverComment: 'Get well soon', createdAt: '2025-05-14', employee: { id: 'demo-3', firstName: 'Amit', lastName: 'Patel', employeeId: 'EMP003', avatar: null, department: { name: 'Design' } }, approver: { id: 'demo-2', firstName: 'Priya', lastName: 'Sharma' }, workflowInstance: null },
-      { id: 'leave-3', type: 'paid', startDate: '2025-06-01', endDate: '2025-06-05', totalDays: 5, reason: 'Family vacation', status: 'pending', employeeId: 'demo-6', approverId: null, approverComment: null, createdAt: '2025-05-25', employee: { id: 'demo-6', firstName: 'Ananya', lastName: 'Gupta', employeeId: 'EMP006', avatar: null, department: { name: 'Marketing' } }, approver: null, workflowInstance: null },
-      { id: 'leave-4', type: 'casual', startDate: '2025-05-28', endDate: '2025-05-28', totalDays: 1, reason: 'Doctor appointment', status: 'pending', employeeId: 'demo-4', approverId: null, approverComment: null, createdAt: '2025-05-26', employee: { id: 'demo-4', firstName: 'Sneha', lastName: 'Reddy', employeeId: 'EMP004', avatar: null, department: { name: 'Finance' } }, approver: null, workflowInstance: null },
-      { id: 'leave-5', type: 'sick', startDate: '2025-05-10', endDate: '2025-05-10', totalDays: 1, reason: 'Migraine', status: 'rejected', employeeId: 'demo-8', approverId: 'demo-9', approverComment: 'Critical project deadline', createdAt: '2025-05-09', employee: { id: 'demo-8', firstName: 'Deepa', lastName: 'Iyer', employeeId: 'EMP008', avatar: null, department: { name: 'Sales' } }, approver: { id: 'demo-9', firstName: 'Arjun', lastName: 'Menon' }, workflowInstance: null },
-      { id: 'leave-6', type: 'paid', startDate: '2025-04-14', endDate: '2025-04-18', totalDays: 5, reason: 'Annual family trip', status: 'approved', employeeId: 'demo-9', approverId: 'demo-2', approverComment: 'Enjoy your trip', createdAt: '2025-04-01', employee: { id: 'demo-9', firstName: 'Arjun', lastName: 'Menon', employeeId: 'EMP009', avatar: null, department: { name: 'Operations' } }, approver: { id: 'demo-2', firstName: 'Priya', lastName: 'Sharma' }, workflowInstance: null },
-      { id: 'leave-7', type: 'casual', startDate: '2025-06-10', endDate: '2025-06-11', totalDays: 2, reason: 'Home relocation', status: 'pending', employeeId: 'demo-5', approverId: null, approverComment: null, createdAt: '2025-06-01', employee: { id: 'demo-5', firstName: 'Vikram', lastName: 'Singh', employeeId: 'EMP005', avatar: null, department: { name: 'Engineering' } }, approver: null, workflowInstance: null },
-    ];
-    let filtered = demoLeaves;
+    // Fallback to DEMO_LEAVES from demo-data.ts
+    const url = new URL(req.url);
+    const status = url.searchParams.get('status');
+    const employeeId = url.searchParams.get('employeeId');
+    const type = url.searchParams.get('type');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+
+    let filtered = [...DEMO_LEAVES];
     if (status) filtered = filtered.filter(l => l.status === status);
-    if (type) filtered = filtered.filter(l => l.type === type);
+    if (type) filtered = filtered.filter(l => l.type.toLowerCase().includes(type.toLowerCase()));
     if (employeeId) filtered = filtered.filter(l => l.employeeId === employeeId);
     return NextResponse.json({
       data: filtered,
-      pagination: { page, limit, total: filtered.length, totalPages: 1 },
+      pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
     });
   }
 }

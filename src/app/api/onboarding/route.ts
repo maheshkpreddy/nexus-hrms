@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { DEMO_ONBOARDING } from '@/lib/demo-data';
 
 export async function GET(req: NextRequest) {
   try {
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Onboarding GET error:', error);
-    // Demo data fallback when database is unavailable
+    // Fallback to DEMO_ONBOARDING from demo-data.ts
     const url = new URL(req.url);
     const employeeId = url.searchParams.get('employeeId');
     const status = url.searchParams.get('status');
@@ -51,62 +52,10 @@ export async function GET(req: NextRequest) {
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
 
-    const demoTasks = [
-      {
-        id: 'ot-1', title: 'Complete IT Setup', description: 'Set up laptop, email, and VPN access',
-        category: 'it', status: 'completed', dueDate: new Date('2025-01-10'), assignedTo: 'IT Department',
-        employeeId: 'demo-5', completedAt: new Date('2025-01-09'),
-        createdAt: new Date('2025-01-05'), updatedAt: new Date('2025-01-09'),
-        employee: { id: 'demo-5', firstName: 'Vikram', lastName: 'Singh', employeeId: 'EMP005', avatar: null, department: { name: 'Engineering' } },
-      },
-      {
-        id: 'ot-2', title: 'HR Orientation', description: 'Attend HR orientation and complete paperwork',
-        category: 'hr', status: 'in_progress', dueDate: new Date('2025-01-15'), assignedTo: 'HR Team',
-        employeeId: 'demo-5', completedAt: null,
-        createdAt: new Date('2025-01-05'), updatedAt: new Date('2025-01-08'),
-        employee: { id: 'demo-5', firstName: 'Vikram', lastName: 'Singh', employeeId: 'EMP005', avatar: null, department: { name: 'Engineering' } },
-      },
-      {
-        id: 'ot-3', title: 'Security Training', description: 'Complete mandatory security awareness training',
-        category: 'compliance', status: 'pending', dueDate: new Date('2025-02-01'), assignedTo: 'Security Team',
-        employeeId: 'demo-5', completedAt: null,
-        createdAt: new Date('2025-01-15'), updatedAt: new Date('2025-01-15'),
-        employee: { id: 'demo-5', firstName: 'Vikram', lastName: 'Singh', employeeId: 'EMP005', avatar: null, department: { name: 'Engineering' } },
-      },
-      {
-        id: 'ot-4', title: 'Team Introduction', description: 'Meet with team members and key stakeholders',
-        category: 'general', status: 'completed', dueDate: new Date('2025-01-20'), assignedTo: 'Manager',
-        employeeId: 'demo-5', completedAt: new Date('2025-01-12'),
-        createdAt: new Date('2025-01-08'), updatedAt: new Date('2025-01-12'),
-        employee: { id: 'demo-5', firstName: 'Vikram', lastName: 'Singh', employeeId: 'EMP005', avatar: null, department: { name: 'Engineering' } },
-      },
-      {
-        id: 'ot-5', title: 'Benefits Enrollment', description: 'Enroll in health and retirement benefits',
-        category: 'hr', status: 'overdue', dueDate: new Date('2025-01-10'), assignedTo: 'HR Team',
-        employeeId: 'demo-8', completedAt: null,
-        createdAt: new Date('2025-11-05'), updatedAt: new Date('2025-11-05'),
-        employee: { id: 'demo-8', firstName: 'Deepa', lastName: 'Iyer', employeeId: 'EMP008', avatar: null, department: { name: 'Sales' } },
-      },
-      {
-        id: 'ot-6', title: 'Access Card Collection', description: 'Collect office access card from reception',
-        category: 'facilities', status: 'completed', dueDate: new Date('2025-11-05'), assignedTo: 'Facilities',
-        employeeId: 'demo-8', completedAt: new Date('2025-11-02'),
-        createdAt: new Date('2025-11-01'), updatedAt: new Date('2025-11-02'),
-        employee: { id: 'demo-8', firstName: 'Deepa', lastName: 'Iyer', employeeId: 'EMP008', avatar: null, department: { name: 'Sales' } },
-      },
-      {
-        id: 'ot-7', title: 'Probation Review Meeting', description: 'Schedule probation period review with manager',
-        category: 'hr', status: 'pending', dueDate: new Date('2025-04-08'), assignedTo: 'HR Team',
-        employeeId: 'demo-5', completedAt: null,
-        createdAt: new Date('2025-02-01'), updatedAt: new Date('2025-02-01'),
-        employee: { id: 'demo-5', firstName: 'Vikram', lastName: 'Singh', employeeId: 'EMP005', avatar: null, department: { name: 'Engineering' } },
-      },
-    ];
-
-    let filtered = demoTasks;
-    if (employeeId) filtered = filtered.filter((t) => t.employeeId === employeeId);
-    if (status) filtered = filtered.filter((t) => t.status === status);
-    if (category) filtered = filtered.filter((t) => t.category === category);
+    let filtered = [...DEMO_ONBOARDING];
+    if (employeeId) filtered = filtered.filter(t => t.employeeId === employeeId);
+    if (status) filtered = filtered.filter(t => t.status === status);
+    if (category) filtered = filtered.filter(t => t.category === category);
 
     return NextResponse.json({
       data: filtered,

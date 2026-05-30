@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { DEMO_WORKFLOWS } from '@/lib/demo-data';
 
 // GET: List workflow definitions and instances
 export async function GET(req: NextRequest) {
@@ -67,100 +68,28 @@ export async function GET(req: NextRequest) {
     }
   } catch (error) {
     console.error('Workflows GET error:', error);
-    // Demo data fallback when database is unavailable
+    // Fallback to DEMO_WORKFLOWS from demo-data.ts
     const url = new URL(req.url);
     const type = url.searchParams.get('type');
     const companyId = url.searchParams.get('companyId');
     const entity = url.searchParams.get('entity');
-    const status = url.searchParams.get('status');
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
 
     if (type === 'definitions' || !type) {
-      const demoDefinitions = [
-        {
-          id: 'wf-1', name: 'Leave Approval', type: 'approval', entity: 'leave',
-          description: 'Standard leave approval workflow', isActive: true,
-          companyId: companyId || 'comp-1',
-          createdAt: new Date('2024-06-01'), updatedAt: new Date('2024-06-01'),
-          company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-          steps: [
-            { id: 'wfs-1', name: 'Manager Approval', stepOrder: 0, approverRole: 'manager', approverType: 'role', autoApprove: false, action: 'approve_reject', workflowDefId: 'wf-1' },
-            { id: 'wfs-2', name: 'HR Review', stepOrder: 1, approverRole: 'hr', approverType: 'role', autoApprove: false, action: 'approve_reject', workflowDefId: 'wf-1' },
-          ],
-          _count: { instances: 5 },
-        },
-        {
-          id: 'wf-2', name: 'Expense Approval', type: 'approval', entity: 'expense',
-          description: 'Expense claim approval workflow', isActive: true,
-          companyId: companyId || 'comp-1',
-          createdAt: new Date('2024-06-01'), updatedAt: new Date('2024-06-01'),
-          company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-          steps: [
-            { id: 'wfs-3', name: 'Manager Approval', stepOrder: 0, approverRole: 'manager', approverType: 'role', autoApprove: false, action: 'approve_reject', workflowDefId: 'wf-2' },
-          ],
-          _count: { instances: 3 },
-        },
-        {
-          id: 'wf-3', name: 'Travel Approval', type: 'approval', entity: 'travel',
-          description: 'Travel request approval workflow', isActive: true,
-          companyId: companyId || 'comp-1',
-          createdAt: new Date('2024-07-15'), updatedAt: new Date('2024-07-15'),
-          company: { id: companyId || 'comp-1', name: 'Nexus Technologies' },
-          steps: [
-            { id: 'wfs-4', name: 'Manager Approval', stepOrder: 0, approverRole: 'manager', approverType: 'role', autoApprove: false, action: 'approve_reject', workflowDefId: 'wf-3' },
-            { id: 'wfs-5', name: 'Finance Review', stepOrder: 1, approverRole: 'finance', approverType: 'role', autoApprove: false, action: 'approve_reject', workflowDefId: 'wf-3' },
-          ],
-          _count: { instances: 2 },
-        },
-      ];
-
-      let filtered = demoDefinitions;
-      if (entity) filtered = filtered.filter((d) => d.entity === entity);
+      let filtered = [...DEMO_WORKFLOWS];
+      if (companyId) filtered = filtered.filter(d => d.companyId === companyId);
+      if (entity) filtered = filtered.filter(d => d.entity === entity);
 
       return NextResponse.json({
         data: filtered,
         pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
       });
     } else {
-      const demoInstances = [
-        {
-          id: 'wi-1', status: 'pending', currentStep: 0, initiatedBy: 'demo-6',
-          workflowDefId: 'wf-1', workflowInstanceId: null,
-          createdAt: new Date('2025-02-20'), updatedAt: new Date('2025-02-20'),
-          workflowDef: { id: 'wf-1', name: 'Leave Approval', entity: 'leave' },
-          steps: [
-            { id: 'wis-1', stepOrder: 0, status: 'pending', actionedBy: null, comments: null, actedAt: null, workflowInstanceId: 'wi-1' },
-            { id: 'wis-2', stepOrder: 1, status: 'pending', actionedBy: null, comments: null, actedAt: null, workflowInstanceId: 'wi-1' },
-          ],
-        },
-        {
-          id: 'wi-2', status: 'approved', currentStep: 0, initiatedBy: 'demo-8',
-          workflowDefId: 'wf-2', workflowInstanceId: null,
-          createdAt: new Date('2025-02-15'), updatedAt: new Date('2025-02-16'),
-          workflowDef: { id: 'wf-2', name: 'Expense Approval', entity: 'expense' },
-          steps: [
-            { id: 'wis-3', stepOrder: 0, status: 'approved', actionedBy: 'demo-9', comments: 'Approved', actedAt: new Date('2025-02-16'), workflowInstanceId: 'wi-2' },
-          ],
-        },
-        {
-          id: 'wi-3', status: 'rejected', currentStep: 0, initiatedBy: 'demo-6',
-          workflowDefId: 'wf-3', workflowInstanceId: null,
-          createdAt: new Date('2025-02-10'), updatedAt: new Date('2025-02-12'),
-          workflowDef: { id: 'wf-3', name: 'Travel Approval', entity: 'travel' },
-          steps: [
-            { id: 'wis-4', stepOrder: 0, status: 'rejected', actionedBy: 'demo-10', comments: 'Budget constraints', actedAt: new Date('2025-02-12'), workflowInstanceId: 'wi-3' },
-            { id: 'wis-5', stepOrder: 1, status: 'pending', actionedBy: null, comments: null, actedAt: null, workflowInstanceId: 'wi-3' },
-          ],
-        },
-      ];
-
-      let filtered = demoInstances;
-      if (status) filtered = filtered.filter((i) => i.status === status);
-
+      // For instances fallback, return empty since we don't have demo instances
       return NextResponse.json({
-        data: filtered,
-        pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
+        data: [],
+        pagination: { page, limit, total: 0, totalPages: 0 },
       });
     }
   }
