@@ -64,7 +64,10 @@ export async function GET(req: NextRequest) {
   }
 
   // Demo data fallback (when DB is empty or unavailable)
-  return filterDemoCompliance({ companyId, status, category, page, limit });
+  const result = filterDemoCompliance({ companyId, status, category, page, limit });
+  // Add debug info to verify this code version is deployed
+  const json = await result.json();
+  return NextResponse.json({ ...json, _debug: 'demo-fallback-v2' });
 }
 
 export async function POST(req: NextRequest) {
