@@ -71,11 +71,11 @@ export function Employees() {
   useEffect(() => {
     if (currentCompany?.id) {
       getDepartments({ companyId: currentCompany.id }).then(res => {
-        const data = Array.isArray(res) ? res : [];
+        const data = Array.isArray(res) ? res : ((res as any)?.data || []);
         setDepartmentOptions(data.map((d: { id: string; name: string }) => ({ id: d.id, name: d.name })));
       }).catch(() => {});
       getBranches({ companyId: currentCompany.id }).then(res => {
-        const data = Array.isArray(res) ? res : [];
+        const data = Array.isArray(res) ? res : ((res as any)?.data || []);
         setBranchOptions(data.map((b: { id: string; name: string }) => ({ id: b.id, name: b.name })));
       }).catch(() => {});
     }

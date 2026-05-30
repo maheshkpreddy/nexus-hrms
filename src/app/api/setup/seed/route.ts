@@ -345,12 +345,16 @@ export async function POST() {
     // ==================== BRANCHES (find by code+companyId) ====================
     log.push('--- Seeding Branches ---');
     const existingBranchCount = await db.branch.count();
-    if (existingBranchCount < 4) {
+    if (existingBranchCount < 8) {
       const branches = await Promise.all([
         findOrCreateBranch({ name: 'HQ San Francisco', code: 'TCG-SF', city: 'San Francisco', state: 'CA', country: 'US', companyId: tcg.id }),
         findOrCreateBranch({ name: 'NYC Office', code: 'TCG-NY', city: 'New York', state: 'NY', country: 'US', companyId: tcg.id }),
+        findOrCreateBranch({ name: 'Bangalore Tech Center', code: 'TCG-BLR', city: 'Bangalore', state: 'KA', country: 'IN', companyId: tcg.id }),
         findOrCreateBranch({ name: 'Mumbai HQ', code: 'MPI-MUM', city: 'Mumbai', state: 'MH', country: 'IN', companyId: mpi.id }),
+        findOrCreateBranch({ name: 'Delhi Factory', code: 'MPI-DEL', city: 'New Delhi', state: 'DL', country: 'IN', companyId: mpi.id }),
         findOrCreateBranch({ name: 'London Office', code: 'HFS-LON', city: 'London', state: 'England', country: 'GB', companyId: hfs.id }),
+        findOrCreateBranch({ name: 'Berlin HQ', code: 'RMG-BER', city: 'Berlin', state: 'Berlin', country: 'DE', companyId: rmg.id }),
+        findOrCreateBranch({ name: 'Singapore HQ', code: 'LTW-SG', city: 'Singapore', state: 'Central', country: 'SG', companyId: ltw.id }),
       ]);
       created.branches = branches.length;
       log.push(`Branches: ${branches.length} ensured`);
@@ -362,24 +366,32 @@ export async function POST() {
     // Re-fetch branches for references
     const branchSF = await db.branch.findFirst({ where: { code: 'TCG-SF' } });
     const branchNY = await db.branch.findFirst({ where: { code: 'TCG-NY' } });
+    const branchBLR = await db.branch.findFirst({ where: { code: 'TCG-BLR' } });
     const branchMUM = await db.branch.findFirst({ where: { code: 'MPI-MUM' } });
+    const branchDEL = await db.branch.findFirst({ where: { code: 'MPI-DEL' } });
     const branchLON = await db.branch.findFirst({ where: { code: 'HFS-LON' } });
+    const branchBER = await db.branch.findFirst({ where: { code: 'RMG-BER' } });
+    const branchSG = await db.branch.findFirst({ where: { code: 'LTW-SG' } });
 
     // ==================== DEPARTMENTS (find by code+companyId) ====================
     log.push('--- Seeding Departments ---');
     const existingDeptCount = await db.department.count();
-    if (existingDeptCount < 10) {
+    if (existingDeptCount < 14) {
       const departments = await Promise.all([
-        findOrCreateDepartment({ name: 'Engineering', code: 'ENG', companyId: tcg.id }),
-        findOrCreateDepartment({ name: 'Human Resources', code: 'HR', companyId: tcg.id }),
-        findOrCreateDepartment({ name: 'Design', code: 'DSG', companyId: tcg.id }),
-        findOrCreateDepartment({ name: 'Finance', code: 'FIN', companyId: tcg.id }),
-        findOrCreateDepartment({ name: 'Operations', code: 'OPS', companyId: tcg.id }),
-        findOrCreateDepartment({ name: 'Sales', code: 'SAL', companyId: tcg.id }),
-        findOrCreateDepartment({ name: 'Quality', code: 'QAT', companyId: mpi.id }),
-        findOrCreateDepartment({ name: 'Production', code: 'PRD', companyId: mpi.id }),
-        findOrCreateDepartment({ name: 'Clinical', code: 'CLI', companyId: hfs.id }),
-        findOrCreateDepartment({ name: 'Analytics', code: 'ANA', companyId: tcg.id }),
+        findOrCreateDepartment({ name: 'Engineering', code: 'ENG', description: 'Software engineering and development', companyId: tcg.id }),
+        findOrCreateDepartment({ name: 'Human Resources', code: 'HR', description: 'People operations and HR management', companyId: tcg.id }),
+        findOrCreateDepartment({ name: 'Design', code: 'DSG', description: 'Product design and UX research', companyId: tcg.id }),
+        findOrCreateDepartment({ name: 'Finance', code: 'FIN', description: 'Financial planning and accounting', companyId: tcg.id }),
+        findOrCreateDepartment({ name: 'Operations', code: 'OPS', description: 'Business operations and strategy', companyId: tcg.id }),
+        findOrCreateDepartment({ name: 'Sales', code: 'SAL', description: 'Sales and business development', companyId: tcg.id }),
+        findOrCreateDepartment({ name: 'Analytics', code: 'ANA', description: 'Data analytics and BI', companyId: tcg.id }),
+        findOrCreateDepartment({ name: 'Production', code: 'PRD', description: 'Manufacturing production', companyId: mpi.id }),
+        findOrCreateDepartment({ name: 'Quality', code: 'QAT', description: 'Quality assurance and control', companyId: mpi.id }),
+        findOrCreateDepartment({ name: 'Operations', code: 'MOPS', description: 'Plant operations', companyId: mpi.id }),
+        findOrCreateDepartment({ name: 'Clinical', code: 'CLI', description: 'Clinical services', companyId: hfs.id }),
+        findOrCreateDepartment({ name: 'Administration', code: 'ADM', description: 'Hospital administration', companyId: hfs.id }),
+        findOrCreateDepartment({ name: 'Retail Operations', code: 'RTL', description: 'Store operations', companyId: rmg.id }),
+        findOrCreateDepartment({ name: 'Logistics', code: 'LOG', description: 'Fleet and logistics', companyId: ltw.id }),
       ]);
       created.departments = departments.length;
       log.push(`Departments: ${departments.length} ensured`);
@@ -395,10 +407,14 @@ export async function POST() {
     const finDept = await db.department.findFirst({ where: { code: 'FIN', companyId: tcg.id } });
     const opsDept = await db.department.findFirst({ where: { code: 'OPS', companyId: tcg.id } });
     const salesDept = await db.department.findFirst({ where: { code: 'SAL', companyId: tcg.id } });
-    const qualDept = await db.department.findFirst({ where: { code: 'QAT', companyId: mpi.id } });
-    const prodDept = await db.department.findFirst({ where: { code: 'PRD', companyId: mpi.id } });
-    const clinDept = await db.department.findFirst({ where: { code: 'CLI', companyId: hfs.id } });
     const anaDept = await db.department.findFirst({ where: { code: 'ANA', companyId: tcg.id } });
+    const prodDept = await db.department.findFirst({ where: { code: 'PRD', companyId: mpi.id } });
+    const qualDept = await db.department.findFirst({ where: { code: 'QAT', companyId: mpi.id } });
+    const mpiOpsDept = await db.department.findFirst({ where: { code: 'MOPS', companyId: mpi.id } });
+    const clinDept = await db.department.findFirst({ where: { code: 'CLI', companyId: hfs.id } });
+    const adminDept = await db.department.findFirst({ where: { code: 'ADM', companyId: hfs.id } });
+    const retailDept = await db.department.findFirst({ where: { code: 'RTL', companyId: rmg.id } });
+    const logDept = await db.department.findFirst({ where: { code: 'LOG', companyId: ltw.id } });
 
     // ==================== USERS (upsert by unique `email`) ====================
     log.push('--- Seeding Users ---');
@@ -481,138 +497,77 @@ export async function POST() {
     log.push('--- Seeding Employees ---');
     const existingEmpCount = await db.employee.count();
 
-    if (existingEmpCount < 10 && engDept && hrDept && designDept && finDept && opsDept && salesDept && qualDept && prodDept && clinDept) {
-      const employees = await Promise.all([
-        db.employee.upsert({
-          where: { email: 'sarah.j@techcorp.com' },
-          update: {},
-          create: {
-            employeeId: 'EMP001', firstName: 'Sarah', lastName: 'Johnson', email: 'sarah.j@techcorp.com',
-            designation: 'Senior Software Engineer', jobTitle: 'Senior Developer', employmentType: 'full-time',
-            status: 'active', joiningDate: new Date('2022-03-15'),
-            companyId: tcg.id, branchId: branchSF?.id, departmentId: engDept.id, userId: users[1].id,
-          },
-        }),
-        db.employee.upsert({
-          where: { email: 'raj.p@techcorp.com' },
-          update: {},
-          create: {
-            employeeId: 'EMP002', firstName: 'Raj', lastName: 'Patel', email: 'raj.p@techcorp.com',
-            designation: 'HR Manager', employmentType: 'full-time',
-            status: 'active', joiningDate: new Date('2021-07-01'),
-            companyId: tcg.id, branchId: branchSF?.id, departmentId: hrDept.id, userId: users[2].id,
-          },
-        }),
-        db.employee.upsert({
-          where: { email: 'emily.c@techcorp.com' },
-          update: {},
-          create: {
-            employeeId: 'EMP003', firstName: 'Emily', lastName: 'Chen', email: 'emily.c@techcorp.com',
-            designation: 'Product Designer', employmentType: 'full-time',
-            status: 'active', joiningDate: new Date('2023-01-10'),
-            companyId: tcg.id, branchId: branchSF?.id, departmentId: designDept.id, userId: users[3].id,
-          },
-        }),
-        db.employee.upsert({
-          where: { email: 'michael.b@techcorp.com' },
-          update: {},
-          create: {
-            employeeId: 'EMP004', firstName: 'Michael', lastName: 'Brown', email: 'michael.b@techcorp.com',
-            designation: 'DevOps Lead', employmentType: 'full-time',
-            status: 'probation', joiningDate: new Date('2024-09-01'), probationEnd: new Date('2025-03-01'),
-            companyId: tcg.id, branchId: branchSF?.id, departmentId: engDept.id, userId: users[4].id,
-          },
-        }),
-        db.employee.upsert({
-          where: { email: 'priya.s@manufactpro.com' },
-          update: {},
-          create: {
-            employeeId: 'EMP005', firstName: 'Priya', lastName: 'Sharma', email: 'priya.s@manufactpro.com',
-            designation: 'Production Manager', employmentType: 'full-time',
-            status: 'active', joiningDate: new Date('2020-11-20'),
-            companyId: mpi.id, branchId: branchMUM?.id, departmentId: prodDept.id, userId: users[5].id,
-          },
-        }),
-        db.employee.upsert({
-          where: { email: 'david.w@healthfirst.com' },
-          update: {},
-          create: {
-            employeeId: 'EMP006', firstName: 'David', lastName: 'Wilson', email: 'david.w@healthfirst.com',
-            designation: 'Nurse Practitioner', employmentType: 'full-time',
-            status: 'on_leave', joiningDate: new Date('2019-05-15'),
-            companyId: hfs.id, branchId: branchLON?.id, departmentId: clinDept.id, userId: users[6].id,
-          },
-        }),
-        db.employee.upsert({
-          where: { email: 'aiko.t@logitrans.com' },
-          update: {},
-          create: {
-            employeeId: 'EMP007', firstName: 'Aiko', lastName: 'Tanaka', email: 'aiko.t@logitrans.com',
-            designation: 'Fleet Coordinator', employmentType: 'full-time',
-            status: 'active', joiningDate: new Date('2023-06-01'),
-            companyId: ltw.id, departmentId: opsDept.id, userId: users[7].id,
-          },
-        }),
-        db.employee.upsert({
-          where: { email: 'carlos.r@retailmax.com' },
-          update: {},
-          create: {
-            employeeId: 'EMP008', firstName: 'Carlos', lastName: 'Rodriguez', email: 'carlos.r@retailmax.com',
-            designation: 'Store Manager', employmentType: 'full-time',
-            status: 'notice_period', joiningDate: new Date('2021-02-10'),
-            companyId: rmg.id, departmentId: salesDept.id, userId: users[8].id,
-          },
-        }),
-        db.employee.upsert({
-          where: { email: 'lisa.a@techcorp.com' },
-          update: {},
-          create: {
-            employeeId: 'EMP009', firstName: 'Lisa', lastName: 'Anderson', email: 'lisa.a@techcorp.com',
-            designation: 'Finance Analyst', employmentType: 'full-time',
-            status: 'active', joiningDate: new Date('2022-08-22'),
-            companyId: tcg.id, branchId: branchNY?.id, departmentId: finDept.id, userId: users[9].id,
-          },
-        }),
-        db.employee.upsert({
-          where: { email: 'arjun.k@manufactpro.com' },
-          update: {},
-          create: {
-            employeeId: 'EMP010', firstName: 'Arjun', lastName: 'Kumar', email: 'arjun.k@manufactpro.com',
-            designation: 'Quality Inspector', employmentType: 'full-time',
-            status: 'active', joiningDate: new Date('2023-04-01'),
-            companyId: mpi.id, branchId: branchMUM?.id, departmentId: qualDept.id, userId: users[10].id,
-          },
-        }),
+    if (existingEmpCount < 35 && engDept && hrDept && designDept && finDept && opsDept && salesDept && anaDept && prodDept && qualDept && mpiOpsDept && clinDept && adminDept && retailDept && logDept) {
+      // Helper to safely upsert employee
+      const empUpsert = async (email: string, data: Parameters<typeof db.employee.upsert>[0]['create']) => {
+        try { return await db.employee.upsert({ where: { email }, update: {}, create: data }); } catch (e) { console.error(`Failed to upsert ${email}:`, e); return null; }
+      };
+      const empResults = await Promise.all([
+        // TechCorp Global (12 employees)
+        empUpsert('sarah.j@techcorp.com', { employeeId: 'TCG001', firstName: 'Sarah', lastName: 'Johnson', email: 'sarah.j@techcorp.com', phone: '+1-415-555-0101', designation: 'Senior Software Engineer', jobTitle: 'Senior Developer', employmentType: 'full-time', status: 'active', joiningDate: new Date('2022-03-15'), companyId: tcg.id, branchId: branchSF?.id, departmentId: engDept.id }),
+        empUpsert('raj.p@techcorp.com', { employeeId: 'TCG002', firstName: 'Raj', lastName: 'Patel', email: 'raj.p@techcorp.com', phone: '+1-415-555-0102', designation: 'HR Manager', jobTitle: 'HR Manager', employmentType: 'full-time', status: 'active', joiningDate: new Date('2021-07-01'), companyId: tcg.id, branchId: branchSF?.id, departmentId: hrDept.id }),
+        empUpsert('emily.c@techcorp.com', { employeeId: 'TCG003', firstName: 'Emily', lastName: 'Chen', email: 'emily.c@techcorp.com', phone: '+1-415-555-0103', designation: 'Product Designer', jobTitle: 'Lead Designer', employmentType: 'full-time', status: 'active', joiningDate: new Date('2023-01-10'), companyId: tcg.id, branchId: branchSF?.id, departmentId: designDept.id }),
+        empUpsert('michael.b@techcorp.com', { employeeId: 'TCG004', firstName: 'Michael', lastName: 'Brown', email: 'michael.b@techcorp.com', phone: '+1-212-555-0104', designation: 'DevOps Lead', jobTitle: 'DevOps Lead', employmentType: 'full-time', status: 'probation', joiningDate: new Date('2024-09-01'), probationEnd: new Date('2025-03-01'), companyId: tcg.id, branchId: branchNY?.id, departmentId: engDept.id }),
+        empUpsert('lisa.a@techcorp.com', { employeeId: 'TCG005', firstName: 'Lisa', lastName: 'Anderson', email: 'lisa.a@techcorp.com', phone: '+1-212-555-0105', designation: 'Finance Analyst', jobTitle: 'Senior Analyst', employmentType: 'full-time', status: 'active', joiningDate: new Date('2022-08-22'), companyId: tcg.id, branchId: branchNY?.id, departmentId: finDept.id }),
+        empUpsert('arjun.m@techcorp.com', { employeeId: 'TCG006', firstName: 'Arjun', lastName: 'Menon', email: 'arjun.m@techcorp.com', phone: '+91-80-555-0106', designation: 'QA Engineer', jobTitle: 'QA Lead', employmentType: 'full-time', status: 'active', joiningDate: new Date('2022-09-20'), companyId: tcg.id, branchId: branchBLR?.id, departmentId: engDept.id }),
+        empUpsert('deepa.i@techcorp.com', { employeeId: 'TCG007', firstName: 'Deepa', lastName: 'Iyer', email: 'deepa.i@techcorp.com', phone: '+91-80-555-0107', designation: 'Sales Executive', jobTitle: 'Sales Lead', employmentType: 'full-time', status: 'active', joiningDate: new Date('2023-11-01'), companyId: tcg.id, branchId: branchBLR?.id, departmentId: salesDept.id }),
+        empUpsert('vikram.s@techcorp.com', { employeeId: 'TCG008', firstName: 'Vikram', lastName: 'Singh', email: 'vikram.s@techcorp.com', phone: '+91-80-555-0108', designation: 'Data Scientist', jobTitle: 'ML Engineer', employmentType: 'full-time', status: 'active', joiningDate: new Date('2023-04-15'), companyId: tcg.id, branchId: branchBLR?.id, departmentId: anaDept.id }),
+        empUpsert('ananya.g@techcorp.com', { employeeId: 'TCG009', firstName: 'Ananya', lastName: 'Gupta', email: 'ananya.g@techcorp.com', phone: '+91-80-555-0109', designation: 'Marketing Lead', jobTitle: 'Marketing Manager', employmentType: 'full-time', status: 'active', joiningDate: new Date('2023-07-15'), companyId: tcg.id, branchId: branchBLR?.id, departmentId: opsDept.id }),
+        empUpsert('kiran.n@techcorp.com', { employeeId: 'TCG010', firstName: 'Kiran', lastName: 'Nair', email: 'kiran.n@techcorp.com', phone: '+1-415-555-0110', designation: 'Backend Developer', jobTitle: 'Senior Backend Dev', employmentType: 'full-time', status: 'on_leave', joiningDate: new Date('2022-04-15'), companyId: tcg.id, branchId: branchSF?.id, departmentId: engDept.id }),
+        empUpsert('meera.j@techcorp.com', { employeeId: 'TCG011', firstName: 'Meera', lastName: 'Joshi', email: 'meera.j@techcorp.com', phone: '+91-80-555-0111', designation: 'Senior Accountant', jobTitle: 'Accountant', employmentType: 'full-time', status: 'active', joiningDate: new Date('2022-11-10'), companyId: tcg.id, branchId: branchBLR?.id, departmentId: finDept.id }),
+        empUpsert('sneha.r@techcorp.com', { employeeId: 'TCG012', firstName: 'Sneha', lastName: 'Reddy', email: 'sneha.r@techcorp.com', phone: '+91-80-555-0112', designation: 'Recruitment Specialist', jobTitle: 'Recruiter', employmentType: 'full-time', status: 'active', joiningDate: new Date('2024-01-08'), companyId: tcg.id, branchId: branchBLR?.id, departmentId: hrDept.id }),
+        // ManufactPro Industries (8 employees)
+        empUpsert('priya.s@manufactpro.com', { employeeId: 'MPI001', firstName: 'Priya', lastName: 'Sharma', email: 'priya.s@manufactpro.com', phone: '+91-22-555-0201', designation: 'Production Manager', jobTitle: 'Production Head', employmentType: 'full-time', status: 'active', joiningDate: new Date('2020-11-20'), companyId: mpi.id, branchId: branchMUM?.id, departmentId: prodDept.id }),
+        empUpsert('arjun.k@manufactpro.com', { employeeId: 'MPI002', firstName: 'Arjun', lastName: 'Kumar', email: 'arjun.k@manufactpro.com', phone: '+91-22-555-0202', designation: 'Quality Inspector', jobTitle: 'QA Inspector', employmentType: 'full-time', status: 'active', joiningDate: new Date('2023-04-01'), companyId: mpi.id, branchId: branchMUM?.id, departmentId: qualDept.id }),
+        empUpsert('rakesh.v@manufactpro.com', { employeeId: 'MPI003', firstName: 'Rakesh', lastName: 'Verma', email: 'rakesh.v@manufactpro.com', phone: '+91-11-555-0203', designation: 'Shift Supervisor', jobTitle: 'Night Shift Lead', employmentType: 'full-time', status: 'active', joiningDate: new Date('2021-06-15'), companyId: mpi.id, branchId: branchDEL?.id, departmentId: prodDept.id }),
+        empUpsert('neha.g@manufactpro.com', { employeeId: 'MPI004', firstName: 'Neha', lastName: 'Gupta', email: 'neha.g@manufactpro.com', phone: '+91-22-555-0204', designation: 'Safety Officer', jobTitle: 'HSE Officer', employmentType: 'full-time', status: 'active', joiningDate: new Date('2022-01-10'), companyId: mpi.id, branchId: branchMUM?.id, departmentId: mpiOpsDept.id }),
+        empUpsert('suresh.p@manufactpro.com', { employeeId: 'MPI005', firstName: 'Suresh', lastName: 'Patil', email: 'suresh.p@manufactpro.com', phone: '+91-22-555-0205', designation: 'Machine Operator', jobTitle: 'CNC Operator', employmentType: 'contract', status: 'active', joiningDate: new Date('2023-09-01'), companyId: mpi.id, branchId: branchDEL?.id, departmentId: prodDept.id }),
+        empUpsert('amit.d@manufactpro.com', { employeeId: 'MPI006', firstName: 'Amit', lastName: 'Das', email: 'amit.d@manufactpro.com', phone: '+91-11-555-0206', designation: 'Quality Analyst', jobTitle: 'Lab Analyst', employmentType: 'full-time', status: 'notice_period', joiningDate: new Date('2021-03-20'), companyId: mpi.id, branchId: branchDEL?.id, departmentId: qualDept.id }),
+        empUpsert('pooja.m@manufactpro.com', { employeeId: 'MPI007', firstName: 'Pooja', lastName: 'Mehta', email: 'pooja.m@manufactpro.com', phone: '+91-22-555-0207', designation: 'HR Executive', jobTitle: 'HR Business Partner', employmentType: 'full-time', status: 'active', joiningDate: new Date('2022-07-01'), companyId: mpi.id, branchId: branchMUM?.id, departmentId: mpiOpsDept.id }),
+        empUpsert('vijay.r@manufactpro.com', { employeeId: 'MPI008', firstName: 'Vijay', lastName: 'Rao', email: 'vijay.r@manufactpro.com', phone: '+91-22-555-0208', designation: 'Maintenance Engineer', jobTitle: 'Plant Maintenance', employmentType: 'full-time', status: 'active', joiningDate: new Date('2020-05-10'), companyId: mpi.id, branchId: branchMUM?.id, departmentId: mpiOpsDept.id }),
+        // HealthFirst Solutions (6 employees)
+        empUpsert('david.w@healthfirst.com', { employeeId: 'HFS001', firstName: 'David', lastName: 'Wilson', email: 'david.w@healthfirst.com', phone: '+44-20-555-0301', designation: 'Nurse Practitioner', jobTitle: 'Senior NP', employmentType: 'full-time', status: 'on_leave', joiningDate: new Date('2019-05-15'), companyId: hfs.id, branchId: branchLON?.id, departmentId: clinDept.id }),
+        empUpsert('emma.t@healthfirst.com', { employeeId: 'HFS002', firstName: 'Emma', lastName: 'Thompson', email: 'emma.t@healthfirst.com', phone: '+44-20-555-0302', designation: 'Hospital Administrator', jobTitle: 'Admin Director', employmentType: 'full-time', status: 'active', joiningDate: new Date('2020-01-20'), companyId: hfs.id, branchId: branchLON?.id, departmentId: adminDept.id }),
+        empUpsert('james.o@healthfirst.com', { employeeId: 'HFS003', firstName: 'James', lastName: 'Okafor', email: 'james.o@healthfirst.com', phone: '+44-20-555-0303', designation: 'Lab Technician', jobTitle: 'Pathology Tech', employmentType: 'full-time', status: 'active', joiningDate: new Date('2022-03-10'), companyId: hfs.id, branchId: branchLON?.id, departmentId: clinDept.id }),
+        empUpsert('fatima.k@healthfirst.com', { employeeId: 'HFS004', firstName: 'Fatima', lastName: 'Khan', email: 'fatima.k@healthfirst.com', phone: '+44-20-555-0304', designation: 'Pharmacist', jobTitle: 'Chief Pharmacist', employmentType: 'full-time', status: 'active', joiningDate: new Date('2021-08-15'), companyId: hfs.id, branchId: branchLON?.id, departmentId: clinDept.id }),
+        empUpsert('robert.c@healthfirst.com', { employeeId: 'HFS005', firstName: 'Robert', lastName: 'Clarke', email: 'robert.c@healthfirst.com', phone: '+44-20-555-0305', designation: 'Finance Manager', jobTitle: 'CFO', employmentType: 'full-time', status: 'active', joiningDate: new Date('2020-06-01'), companyId: hfs.id, branchId: branchLON?.id, departmentId: adminDept.id }),
+        empUpsert('sarah.m@healthfirst.com', { employeeId: 'HFS006', firstName: 'Sarah', lastName: 'Mitchell', email: 'sarah.m@healthfirst.com', phone: '+44-20-555-0306', designation: 'Registered Nurse', jobTitle: 'ICU Nurse', employmentType: 'full-time', status: 'probation', joiningDate: new Date('2024-10-01'), companyId: hfs.id, branchId: branchLON?.id, departmentId: clinDept.id }),
+        // RetailMax Group (5 employees)
+        empUpsert('carlos.r@retailmax.com', { employeeId: 'RMG001', firstName: 'Carlos', lastName: 'Rodriguez', email: 'carlos.r@retailmax.com', phone: '+49-30-555-0401', designation: 'Store Manager', jobTitle: 'Regional Manager', employmentType: 'full-time', status: 'notice_period', joiningDate: new Date('2021-02-10'), companyId: rmg.id, branchId: branchBER?.id, departmentId: retailDept.id }),
+        empUpsert('anna.m@retailmax.com', { employeeId: 'RMG002', firstName: 'Anna', lastName: 'Mueller', email: 'anna.m@retailmax.com', phone: '+49-30-555-0402', designation: 'Visual Merchandiser', jobTitle: 'Merch Lead', employmentType: 'full-time', status: 'active', joiningDate: new Date('2022-05-01'), companyId: rmg.id, branchId: branchBER?.id, departmentId: retailDept.id }),
+        empUpsert('lars.s@retailmax.com', { employeeId: 'RMG003', firstName: 'Lars', lastName: 'Schmidt', email: 'lars.s@retailmax.com', phone: '+49-30-555-0403', designation: 'Inventory Analyst', jobTitle: 'Supply Chain Analyst', employmentType: 'full-time', status: 'active', joiningDate: new Date('2023-01-15'), companyId: rmg.id, branchId: branchBER?.id, departmentId: retailDept.id }),
+        empUpsert('maria.w@retailmax.com', { employeeId: 'RMG004', firstName: 'Maria', lastName: 'Weber', email: 'maria.w@retailmax.com', phone: '+49-30-555-0404', designation: 'Cashier Lead', jobTitle: 'Front End Lead', employmentType: 'part-time', status: 'active', joiningDate: new Date('2022-11-20'), companyId: rmg.id, branchId: branchBER?.id, departmentId: retailDept.id }),
+        empUpsert('hans.b@retailmax.com', { employeeId: 'RMG005', firstName: 'Hans', lastName: 'Braun', email: 'hans.b@retailmax.com', phone: '+49-30-555-0405', designation: 'E-commerce Manager', jobTitle: 'Digital Commerce Lead', employmentType: 'full-time', status: 'active', joiningDate: new Date('2023-06-01'), companyId: rmg.id, branchId: branchBER?.id, departmentId: retailDept.id }),
+        // LogiTrans Worldwide (4 employees)
+        empUpsert('aiko.t@logitrans.com', { employeeId: 'LTW001', firstName: 'Aiko', lastName: 'Tanaka', email: 'aiko.t@logitrans.com', phone: '+65-555-0501', designation: 'Fleet Coordinator', jobTitle: 'Fleet Manager', employmentType: 'full-time', status: 'active', joiningDate: new Date('2023-06-01'), companyId: ltw.id, branchId: branchSG?.id, departmentId: logDept.id }),
+        empUpsert('wei.l@logitrans.com', { employeeId: 'LTW002', firstName: 'Wei', lastName: 'Lim', email: 'wei.l@logitrans.com', phone: '+65-555-0502', designation: 'Supply Chain Analyst', jobTitle: 'SCM Lead', employmentType: 'full-time', status: 'active', joiningDate: new Date('2022-09-15'), companyId: ltw.id, branchId: branchSG?.id, departmentId: logDept.id }),
+        empUpsert('ravi.k@logitrans.com', { employeeId: 'LTW003', firstName: 'Ravi', lastName: 'Krishnan', email: 'ravi.k@logitrans.com', phone: '+65-555-0503', designation: 'Warehouse Manager', jobTitle: 'WH Operations', employmentType: 'full-time', status: 'active', joiningDate: new Date('2021-12-01'), companyId: ltw.id, branchId: branchSG?.id, departmentId: logDept.id }),
+        empUpsert('siti.r@logitrans.com', { employeeId: 'LTW004', firstName: 'Siti', lastName: 'Rahman', email: 'siti.r@logitrans.com', phone: '+65-555-0504', designation: 'Customs Officer', jobTitle: 'Trade Compliance', employmentType: 'full-time', status: 'probation', joiningDate: new Date('2024-08-15'), companyId: ltw.id, branchId: branchSG?.id, departmentId: logDept.id }),
       ]);
 
-      // Set reporting manager for some employees
-      await db.employee.updateMany({
-        where: { employeeId: { in: ['EMP003', 'EMP004', 'EMP009'] } },
-        data: { reportingManagerId: employees[0].id },
-      });
-
-      created.employees = employees.length;
-      log.push(`Employees: ${employees.length} ensured`);
+      created.employees = empResults.filter(Boolean).length;
+      log.push(`Employees: ${created.employees} ensured`);
     } else {
       created.employees = existingEmpCount;
       log.push(`Employees: already exist (${existingEmpCount}), skipped`);
     }
 
-    // Re-fetch employees for references
-    const empSarah = await db.employee.findFirst({ where: { employeeId: 'EMP001' } });
-    const empRaj = await db.employee.findFirst({ where: { employeeId: 'EMP002' } });
-    const empEmily = await db.employee.findFirst({ where: { employeeId: 'EMP003' } });
-    const empMichael = await db.employee.findFirst({ where: { employeeId: 'EMP004' } });
-    const empPriya = await db.employee.findFirst({ where: { employeeId: 'EMP005' } });
-    const empDavid = await db.employee.findFirst({ where: { employeeId: 'EMP006' } });
-    const empAiko = await db.employee.findFirst({ where: { employeeId: 'EMP007' } });
-    const empLisa = await db.employee.findFirst({ where: { employeeId: 'EMP009' } });
-    const empArjun = await db.employee.findFirst({ where: { employeeId: 'EMP010' } });
+    // Re-fetch employees for references by email
+    const empSarah = await db.employee.findFirst({ where: { email: 'sarah.j@techcorp.com' } });
+    const empRaj = await db.employee.findFirst({ where: { email: 'raj.p@techcorp.com' } });
+    const empEmily = await db.employee.findFirst({ where: { email: 'emily.c@techcorp.com' } });
+    const empMichael = await db.employee.findFirst({ where: { email: 'michael.b@techcorp.com' } });
+    const empPriya = await db.employee.findFirst({ where: { email: 'priya.s@manufactpro.com' } });
+    const empDavid = await db.employee.findFirst({ where: { email: 'david.w@healthfirst.com' } });
+    const empAiko = await db.employee.findFirst({ where: { email: 'aiko.t@logitrans.com' } });
+    const empLisa = await db.employee.findFirst({ where: { email: 'lisa.a@techcorp.com' } });
+    const empArjun = await db.employee.findFirst({ where: { email: 'arjun.k@manufactpro.com' } });
+    const empCarlos = await db.employee.findFirst({ where: { email: 'carlos.r@retailmax.com' } });
 
     // ==================== JOBS ====================
     log.push('--- Seeding Jobs ---');
     const existingJobCount = await db.job.count();
-    if (existingJobCount < 7) {
+    if (existingJobCount < 8) {
       const jobs = await Promise.all([
         findOrCreateJob({
           title: 'Senior Full-Stack Developer', description: 'We are looking for a senior full-stack developer to join our engineering team.',
@@ -663,6 +618,13 @@ export async function POST() {
           salaryMin: 8000, salaryMax: 12000, status: 'on_hold', priority: 'low', positions: 1,
           postedDate: new Date('2024-11-20'), companyId: ltw.id,
         }),
+        findOrCreateJob({
+          title: 'E-commerce Director', description: 'Lead our digital commerce strategy.',
+          requirements: '8+ years e-commerce, multi-market experience', department: 'Retail Operations',
+          location: 'Berlin, Germany', employmentType: 'Full-time', experienceMin: 8, experienceMax: 12,
+          salaryMin: 90000, salaryMax: 120000, status: 'open', priority: 'high', positions: 1,
+          postedDate: new Date('2024-12-10'), companyId: rmg.id,
+        }),
       ]);
       created.jobs = jobs.length;
       log.push(`Jobs: ${jobs.length} ensured`);
@@ -676,42 +638,30 @@ export async function POST() {
     const jobHR = await db.job.findFirst({ where: { title: 'HR Business Partner', companyId: tcg.id } });
     const jobUX = await db.job.findFirst({ where: { title: 'UX Research Lead', companyId: tcg.id } });
     const jobDataSci = await db.job.findFirst({ where: { title: 'Data Scientist', companyId: tcg.id } });
+    const jobProdSup = await db.job.findFirst({ where: { title: 'Production Supervisor', companyId: mpi.id } });
+    const jobNurse = await db.job.findFirst({ where: { title: 'Registered Nurse', companyId: hfs.id } });
+    const jobCloud = await db.job.findFirst({ where: { title: 'Cloud Infrastructure Engineer', companyId: ltw.id } });
+    const jobEcom = await db.job.findFirst({ where: { title: 'E-commerce Director', companyId: rmg.id } });
 
     // ==================== CANDIDATES ====================
     log.push('--- Seeding Candidates ---');
     const existingCandidateCount = await db.candidate.count();
-    if (existingCandidateCount < 5 && jobFullStack && jobHR && jobUX && jobDataSci) {
+    if (existingCandidateCount < 13 && jobFullStack && jobHR && jobUX && jobDataSci) {
+      const extraJobs = { jobProdSup, jobNurse, jobCloud, jobEcom };
       const candidates = await Promise.all([
-        findOrCreateCandidate({
-          firstName: 'Alex', lastName: 'Turner', email: 'alex.t@email.com',
-          currentCompany: 'Google', currentTitle: 'Software Engineer', experience: 6,
-          expectedSalary: 160000, noticePeriod: '30 days', status: 'interviewing', source: 'LinkedIn',
-          aiScore: 92, skillMatch: 88, cultureFitScore: 85, jobId: jobFullStack.id,
-        }),
-        findOrCreateCandidate({
-          firstName: 'Maya', lastName: 'Singh', email: 'maya.s@email.com',
-          currentCompany: 'Amazon', currentTitle: 'Senior Developer', experience: 8,
-          expectedSalary: 175000, noticePeriod: '60 days', status: 'shortlisted', source: 'Naukri',
-          aiScore: 89, skillMatch: 91, cultureFitScore: 80, jobId: jobFullStack.id,
-        }),
-        findOrCreateCandidate({
-          firstName: 'James', lastName: 'Williams', email: 'james.w@email.com',
-          currentCompany: 'Microsoft', currentTitle: 'HR Manager', experience: 9,
-          expectedSalary: 110000, noticePeriod: '30 days', status: 'offered', source: 'Referral',
-          aiScore: 95, skillMatch: 94, cultureFitScore: 90, jobId: jobHR.id,
-        }),
-        findOrCreateCandidate({
-          firstName: 'Sophie', lastName: 'Martin', email: 'sophie.m@email.com',
-          currentCompany: 'Meta', currentTitle: 'UX Researcher', experience: 7,
-          expectedSalary: 140000, noticePeriod: '45 days', status: 'screening', source: 'Portal',
-          aiScore: 78, skillMatch: 82, cultureFitScore: 88, jobId: jobUX.id,
-        }),
-        findOrCreateCandidate({
-          firstName: 'Wei', lastName: 'Zhang', email: 'wei.z@email.com',
-          currentCompany: 'ByteDance', currentTitle: 'Data Engineer', experience: 4,
-          expectedSalary: 135000, noticePeriod: '30 days', status: 'applied', source: 'Indeed',
-          aiScore: 72, skillMatch: 68, cultureFitScore: 75, jobId: jobDataSci.id,
-        }),
+        findOrCreateCandidate({ firstName: 'Alex', lastName: 'Turner', email: 'alex.t@email.com', currentCompany: 'Google', currentTitle: 'Software Engineer', experience: 6, expectedSalary: 160000, noticePeriod: '30 days', status: 'interviewing', source: 'LinkedIn', aiScore: 92, skillMatch: 88, cultureFitScore: 85, notes: 'Strong full-stack skills', jobId: jobFullStack.id }),
+        findOrCreateCandidate({ firstName: 'Maya', lastName: 'Singh', email: 'maya.s@email.com', currentCompany: 'Amazon', currentTitle: 'Senior Developer', experience: 8, expectedSalary: 175000, noticePeriod: '60 days', status: 'shortlisted', source: 'Naukri', aiScore: 89, skillMatch: 91, cultureFitScore: 80, notes: 'Backend specialist', jobId: jobFullStack.id }),
+        findOrCreateCandidate({ firstName: 'James', lastName: 'Williams', email: 'james.w@email.com', currentCompany: 'Microsoft', currentTitle: 'HR Manager', experience: 9, expectedSalary: 110000, noticePeriod: '30 days', status: 'offered', source: 'Referral', aiScore: 95, skillMatch: 94, cultureFitScore: 90, notes: 'Excellent HR background', jobId: jobHR.id }),
+        findOrCreateCandidate({ firstName: 'Sophie', lastName: 'Martin', email: 'sophie.m@email.com', currentCompany: 'Meta', currentTitle: 'UX Researcher', experience: 7, expectedSalary: 140000, noticePeriod: '45 days', status: 'screening', source: 'Portal', aiScore: 78, skillMatch: 82, cultureFitScore: 88, notes: 'Mixed methods expert', jobId: jobUX.id }),
+        findOrCreateCandidate({ firstName: 'Wei', lastName: 'Zhang', email: 'wei.z@email.com', currentCompany: 'ByteDance', currentTitle: 'Data Engineer', experience: 4, expectedSalary: 135000, noticePeriod: '30 days', status: 'applied', source: 'Indeed', aiScore: 72, skillMatch: 68, cultureFitScore: 75, notes: 'ML pipeline experience', jobId: jobDataSci.id }),
+        ...(extraJobs.jobProdSup ? [findOrCreateCandidate({ firstName: 'Rajesh', lastName: 'Kumar', email: 'rajesh.k@email.com', currentCompany: 'Tata Steel', currentTitle: 'Shift Manager', experience: 10, expectedSalary: 1800000, noticePeriod: '90 days', status: 'interviewing', source: 'Naukri', aiScore: 85, skillMatch: 90, cultureFitScore: 82, notes: 'Heavy industry background', jobId: extraJobs.jobProdSup.id })] : []),
+        ...(extraJobs.jobProdSup ? [findOrCreateCandidate({ firstName: 'Priya', lastName: 'Nair', email: 'priya.n@email.com', currentCompany: 'Reliance', currentTitle: 'Quality Manager', experience: 8, expectedSalary: 1600000, noticePeriod: '60 days', status: 'shortlisted', source: 'Referral', aiScore: 88, skillMatch: 85, cultureFitScore: 90, notes: 'Six Sigma certified', jobId: extraJobs.jobProdSup.id })] : []),
+        ...(extraJobs.jobNurse ? [findOrCreateCandidate({ firstName: 'Grace', lastName: 'Okonkwo', email: 'grace.o@email.com', currentCompany: 'NHS', currentTitle: 'Staff Nurse', experience: 5, expectedSalary: 40000, noticePeriod: '30 days', status: 'interviewing', source: 'NHS Jobs', aiScore: 90, skillMatch: 92, cultureFitScore: 88, notes: 'ICU experience', jobId: extraJobs.jobNurse.id })] : []),
+        ...(extraJobs.jobEcom ? [findOrCreateCandidate({ firstName: 'Thomas', lastName: 'Mueller', email: 'thomas.m@email.com', currentCompany: 'Zalando', currentTitle: 'E-commerce Lead', experience: 9, expectedSalary: 105000, noticePeriod: '45 days', status: 'applied', source: 'LinkedIn', aiScore: 82, skillMatch: 80, cultureFitScore: 78, notes: 'Fashion retail experience', jobId: extraJobs.jobEcom.id })] : []),
+        ...(extraJobs.jobCloud ? [findOrCreateCandidate({ firstName: 'Yuki', lastName: 'Tanaka', email: 'yuki.t@email.com', currentCompany: 'NTT Data', currentTitle: 'Cloud Architect', experience: 6, expectedSalary: 10000, noticePeriod: '30 days', status: 'screening', source: 'Portal', aiScore: 76, skillMatch: 80, cultureFitScore: 72, notes: 'AWS certified', jobId: extraJobs.jobCloud.id })] : []),
+        ...(jobUX ? [findOrCreateCandidate({ firstName: 'Olivia', lastName: 'Brown', email: 'olivia.b@email.com', currentCompany: 'Apple', currentTitle: 'Product Designer', experience: 5, expectedSalary: 145000, noticePeriod: '30 days', status: 'applied', source: 'LinkedIn', aiScore: 84, skillMatch: 86, cultureFitScore: 82, notes: 'Design systems expert', jobId: jobUX.id })] : []),
+        ...(extraJobs.jobEcom ? [findOrCreateCandidate({ firstName: 'Claire', lastName: 'Dubois', email: 'claire.d@email.com', currentCompany: 'Carrefour', currentTitle: 'Regional Director', experience: 12, expectedSalary: 110000, noticePeriod: '60 days', status: 'interviewing', source: 'Referral', aiScore: 87, skillMatch: 84, cultureFitScore: 86, notes: 'Multi-country retail exp', jobId: extraJobs.jobEcom.id })] : []),
+        ...(extraJobs.jobNurse ? [findOrCreateCandidate({ firstName: 'Aisha', lastName: 'Patel', email: 'aisha.p@email.com', currentCompany: 'Bupa', currentTitle: 'Nurse Practitioner', experience: 4, expectedSalary: 42000, noticePeriod: '30 days', status: 'shortlisted', source: 'NHS Jobs', aiScore: 91, skillMatch: 93, cultureFitScore: 87, notes: 'Emergency care specialist', jobId: extraJobs.jobNurse.id })] : []),
       ]);
       created.candidates = candidates.length;
       log.push(`Candidates: ${candidates.length} ensured`);
@@ -722,37 +672,39 @@ export async function POST() {
 
     // Re-fetch candidates
     const candAlex = await db.candidate.findFirst({ where: { email: 'alex.t@email.com' } });
+    const candMaya = await db.candidate.findFirst({ where: { email: 'maya.s@email.com' } });
     const candJames = await db.candidate.findFirst({ where: { email: 'james.w@email.com' } });
+    const candWei = await db.candidate.findFirst({ where: { email: 'wei.z@email.com' } });
+    const candRajesh = await db.candidate.findFirst({ where: { email: 'rajesh.k@email.com' } });
+    const candGrace = await db.candidate.findFirst({ where: { email: 'grace.o@email.com' } });
 
     // ==================== INTERVIEWS ====================
     log.push('--- Seeding Interviews ---');
     const existingInterviewCount = await db.interview.count();
-    if (existingInterviewCount < 3 && candAlex && candJames && jobFullStack && jobHR) {
-      await Promise.all([
-        db.interview.create({
-          data: {
-            type: 'technical', scheduledAt: new Date('2025-01-22T10:00:00'), duration: 60,
-            status: 'scheduled', meetingLink: 'https://meet.example.com/interview-1',
-            candidateId: candAlex.id, jobId: jobFullStack.id,
-          },
-        }),
-        db.interview.create({
-          data: {
-            type: 'hr', scheduledAt: new Date('2025-01-23T14:00:00'), duration: 45,
-            status: 'scheduled',
-            candidateId: candAlex.id, jobId: jobFullStack.id,
-          },
-        }),
-        db.interview.create({
-          data: {
-            type: 'manager', scheduledAt: new Date('2025-01-20T11:00:00'), duration: 60,
-            status: 'completed', feedback: 'Strong technical skills, good culture fit. Recommended for next round.', rating: 4,
-            candidateId: candJames.id, jobId: jobHR.id,
-          },
-        }),
-      ]);
-      created.interviews = 3;
-      log.push('Interviews: 3 created');
+    if (existingInterviewCount < 7) {
+      const ivData: { type: string; scheduledAt: Date; duration: number; status: string; feedback?: string; rating?: number; meetingLink?: string; aiTranscript?: string; candidateId: string; jobId: string }[] = [];
+      if (candAlex && jobFullStack) {
+        ivData.push({ type: 'technical', scheduledAt: new Date('2025-01-22T10:00:00'), duration: 60, status: 'scheduled', meetingLink: 'https://meet.nexushrms.com/int-1', candidateId: candAlex.id, jobId: jobFullStack.id });
+        ivData.push({ type: 'hr', scheduledAt: new Date('2025-01-23T14:00:00'), duration: 45, status: 'scheduled', candidateId: candAlex.id, jobId: jobFullStack.id });
+      }
+      if (candMaya && jobFullStack) {
+        ivData.push({ type: 'coding', scheduledAt: new Date('2025-01-21T09:00:00'), duration: 90, status: 'completed', feedback: 'Excellent coding skills. Solved 3/3 problems. Strong system design.', rating: 5, aiTranscript: 'AI Analysis: Candidate demonstrated exceptional problem-solving ability...', candidateId: candMaya.id, jobId: jobFullStack.id });
+      }
+      if (candJames && jobHR) {
+        ivData.push({ type: 'manager', scheduledAt: new Date('2025-01-20T11:00:00'), duration: 60, status: 'completed', feedback: 'Strong technical skills, good culture fit. Recommended for next round.', rating: 4, aiTranscript: 'AI Interview Transcript: Candidate showed strong problem-solving ability and excellent communication skills. Recommended for final round.', candidateId: candJames.id, jobId: jobHR.id });
+      }
+      if (candRajesh && jobProdSup) {
+        ivData.push({ type: 'behavioral', scheduledAt: new Date('2025-01-25T15:00:00'), duration: 45, status: 'scheduled', meetingLink: 'https://meet.nexushrms.com/int-5', candidateId: candRajesh.id, jobId: jobProdSup.id });
+      }
+      if (candWei && jobDataSci) {
+        ivData.push({ type: 'technical', scheduledAt: new Date('2025-01-24T10:30:00'), duration: 60, status: 'cancelled', feedback: 'Candidate withdrew application.', candidateId: candWei.id, jobId: jobDataSci.id });
+      }
+      if (candGrace && jobNurse) {
+        ivData.push({ type: 'mcq', scheduledAt: new Date('2025-01-26T11:00:00'), duration: 45, status: 'scheduled', candidateId: candGrace.id, jobId: jobNurse.id });
+      }
+      for (const iv of ivData) { try { await db.interview.create({ data: iv }); } catch (_) { /* skip */ } }
+      created.interviews = ivData.length;
+      log.push(`Interviews: ${ivData.length} ensured`);
     } else {
       created.interviews = existingInterviewCount;
       log.push(`Interviews: already exist (${existingInterviewCount}), skipped`);

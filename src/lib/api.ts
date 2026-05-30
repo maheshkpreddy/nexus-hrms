@@ -297,7 +297,10 @@ export async function createVendor(data: Record<string, unknown>) {
 
 // ==================== COMPANIES ====================
 export async function getCompanies() {
-  return apiFetch<{ id: string; name: string; code: string; industry: string | null; country: string | null; currency: string; isActive: boolean; _count: { employees: number } }[]>('/companies');
+  const res = await apiFetch<{ data: { id: string; name: string; code: string; industry: string | null; country: string | null; currency: string; isActive: boolean; _count: { employees: number } }[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>('/companies');
+  // Handle both array and paginated response formats
+  if (Array.isArray(res as any)) return res as any;
+  return (res as any)?.data || res as any;
 }
 
 export async function createCompany(data: Record<string, unknown>) {
@@ -359,14 +362,20 @@ export async function submitSurveyResponse(data: { questionId: string; answer: s
 export async function getDepartments(params?: { companyId?: string; page?: number; limit?: number }) {
   const query = new URLSearchParams();
   if (params) Object.entries(params).forEach(([k, v]) => { if (v) query.set(k, v); });
-  return apiFetch<{ id: string; name: string; code: string; description: string | null; isActive: boolean; companyId: string }[]>(`/departments?${query.toString()}`);
+  const res = await apiFetch<{ data: { id: string; name: string; code: string; description: string | null; isActive: boolean; companyId: string }[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>(`/departments?${query.toString()}`);
+  // Handle both array and paginated response formats
+  if (Array.isArray(res as any)) return res as any;
+  return (res as any)?.data || res as any;
 }
 
 // ==================== BRANCHES ====================
 export async function getBranches(params?: { companyId?: string; page?: number; limit?: number }) {
   const query = new URLSearchParams();
   if (params) Object.entries(params).forEach(([k, v]) => { if (v) query.set(k, v); });
-  return apiFetch<{ id: string; name: string; code: string; city: string | null; country: string | null; isActive: boolean; companyId: string }[]>(`/branches?${query.toString()}`);
+  const res = await apiFetch<{ data: { id: string; name: string; code: string; city: string | null; country: string | null; isActive: boolean; companyId: string }[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>(`/branches?${query.toString()}`);
+  // Handle both array and paginated response formats
+  if (Array.isArray(res as any)) return res as any;
+  return (res as any)?.data || res as any;
 }
 
 // ==================== ONBOARDING ====================
